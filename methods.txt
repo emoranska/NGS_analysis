@@ -1,3 +1,3 @@
 grep -v -P "chr(\d|[Un])+_[NW]*" P1_filtered_Q20_M20_no_ind.recode.vcf > P1_test_filter.vcf
 
-grep -v -P "chrMT" P1_test_filter.vcf > P1_no_Un_NW_MT.vcf
+grep -v -P "chrMT\t.*" P1_test_filter.vcf > P1_no_Un_NW_MT.vcf
