@@ -1,3 +1,10 @@
+# remove records with 'chrUn' and 'chrNW' labels
 grep -v -P "chr(\d|[Un])+_[NW]*" P1_filtered_Q20_M20_no_ind.recode.vcf > P1_test_filter.vcf
 
+# remove records with 'chrMT' labels
 grep -v -P "chrMT\t.*" P1_test_filter.vcf > P1_no_Un_NW_MT.vcf
+
+# save .vcf file to .csv on pendrive because of memory limit
+unvcf P1_no_Un_NW_MT.vcf ../../../../media/tomasz/E4F9-A5D9/
+
+# open .csv file --> see less_memory_usage.py
