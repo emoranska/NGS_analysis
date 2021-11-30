@@ -7,4 +7,5 @@ grep -v -P "chrMT\t.*" P1_test_filter.vcf > P1_no_Un_NW_MT.vcf
 # save .vcf file to .csv on pendrive because of memory limit
 unvcf P1_no_Un_NW_MT.vcf ../../../../media/tomasz/E4F9-A5D9/
 
-# open .csv file --> see less_memory_usage.py
+# open .csv file, create new csv file with samples description and gt calls and remove records with the same gt
+less_memory_usage.py
