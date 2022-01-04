@@ -9,3 +9,12 @@ unvcf P1_no_Un_NW_MT.vcf ../../../../media/tomasz/E4F9-A5D9/
 
 # open .csv file, create new csv file with samples description and gt calls and remove records with the same gt
 less_memory_usage.py
+
+# remove records where >=6 samples have '.' (no data) --> finding_homozyg.py
+
+# regex for searching regions of homozygosity:
+# r"^\d\s{3}(chr\d)?\s{2}\d+\s+\D+\d+\.\d+\s+\w+" - beginning for the records from row number to FILTER label
+# (\s{2,}1/1+|\s{2,}0/1{1,}){1,}$
+# ((\s{2,}1/1){3,}|(\s{2,}0/0){3,}) - trying to extract >= 1/1 and >= 0/0
+# (?=.*(([10])/\3)(?:.*\2){2})(?:\s+[10]/[10]){12}$  -  solution from JvdV
+# (?:(?:\s{2,}\d/\d)*?\s{2,}([10])/\2\b){3} - solution from Thefourthbird
