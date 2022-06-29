@@ -43,6 +43,16 @@ print(*result, sep="\n")
 resultFile = open("chr_test_output.csv", 'w')
 
 # write data to file
-for r in result:
-    resultFile.write(r + "\n")
+for row in result:
+    resultFile.write(row + "\n")
 resultFile.close()
+
+# # solution from CAPSLOCK
+# cond_11x3_true = (drop_dots.iloc[:, 8:] == "1/1").sum(axis=1) >= 3
+# cond_00x3_true = (drop_dots.iloc[:, 8:] == "0/0").sum(axis=1) >= 3
+# result = drop_dots[cond_11x3_true & cond_00x3_true] # pick
+# print(result)
+#
+# extra_2_rows = drop_dots[(cond_11x3_true & ~cond_00x3_true) | (~cond_11x3_true & cond_00x3_true)].head(2)
+# result.append(extra_2_rows)
+# print(result)
