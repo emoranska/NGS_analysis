@@ -1,7 +1,9 @@
 from fuc import pyvcf
 
+"""
 # open vcf file with fuc.pyvcf
-vf = pyvcf.VcfFrame.from_file('P1_no_Un_NW_MT.vcf')
+# vf = pyvcf.VcfFrame.from_file('P1_no_Un_NW_MT.vcf')
+vf = pyvcf.VcfFrame.from_file('P1_chr4_test.vcf')
 
 # remove useless columns, leave GT
 just_gt = vf.strip('GT')
@@ -15,8 +17,14 @@ to_vcf = pyvcf.VcfFrame([''], no_the_same_variant)
 
 # save VcfFrame to vcf file
 P1_no_the_same_variant = to_vcf.to_file('P1_no_the_same_variant.vcf')
+"""
 
-print(type(no_the_same_variant))
+# print(type(no_the_same_variant))
 
 
-
+def remove_the_same_gt_vcf(in_vcf):
+    vf = pyvcf.VcfFrame.from_file(in_vcf)
+    just_gt = vf.strip('GT')
+    i = just_gt.df.apply(lambda r: len(set(r[9:])) != 1, axis=1)
+    no_the_same_variant = just_gt.df[i]
+    return no_the_same_variant
