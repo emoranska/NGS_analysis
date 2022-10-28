@@ -1,7 +1,7 @@
-# burak
+# NGS_analysis
 
- - project for finding regions of homozygosity in sequencing data in vcf file using Python
+ - project for finding regions of homozygosity in sequencing data (vcf file) using Python
  
  Tools:
- - pandas
- - regex
+ - Pandas
+ - RegEx
