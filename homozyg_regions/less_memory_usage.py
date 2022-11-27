@@ -1,6 +1,7 @@
 import pandas as pd
 
 # reading csv files as pandas DataFrame
+
 # data1 = pd.read_csv('P1_no_Un_NW_MT.vcf.default.csv', sep='\t')
 # data2 = pd.read_csv('P1_no_Un_NW_MT.vcf.sample.GT.csv', sep='\t')
 # print(data1, data2)
