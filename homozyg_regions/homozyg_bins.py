@@ -64,7 +64,7 @@ print(df.loc[1, 'one_one_back'], type(df.loc[0, 'one_one_back']))
 df_part = df.drop(['ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'P1-25', 'P1-93', 'P1-88', 'P1-6',
                    'P1-89', 'P1-26', 'P1-12', 'P1-92', 'P1-22', 'P1-90', 'P1-28', 'P1-95'], axis=1)
 
-print(df_part.to_string(max_rows=20))
+# print(df_part.to_string(max_rows=20))
 
 # df_part['common_one_next'] = [set(a).intersection(b) for a, b in zip(df_part.one_one, df_part.one_one_back)]
 
@@ -158,7 +158,7 @@ df_part.loc[notna_only, 'end'] = ['end' if (a-b) < 10000 and (len(h) >= 3 or len
                                   df_part.loc[notna_only, 'inter6'], df_part.loc[notna_only, 'inter7'],
                                   df_part.loc[notna_only, 'inter8'])]
 
-print(df_part.to_string(max_rows=320))
+# print(df_part.to_string(max_rows=320))
 
 # df_part['start'] = df_part[df_part['start'] == 'start']
 #
@@ -173,7 +173,70 @@ print(df_start_end.to_string(max_rows=150))
 a = ['start', 'end']
 df_bins = df_start_end[~(df_start_end['start'].isin(a) & (df_start_end['end'].isin(a)))]
 
-print(df_bins.to_string(max_rows=150))
+print(df_bins.to_string(max_rows=200))
+
+df_bins['one_and_zero'] = (df_bins['one_one'] + df_bins['zero_zero']).apply(sorted)
+df_bins['one_zero_next'] = df_bins['one_and_zero'].shift(-1)
+df_bins['one_zero_back'] = df_bins['one_and_zero'].shift(1)
+
+# remove rows with the same samples in 1/1 and 0/0 inside the region of homozygosity
+df_filter = df_bins.loc[~((df_bins['one_and_zero'] == df_bins['one_zero_next']) &
+                          (df_bins['one_and_zero'] == df_bins['one_zero_back']))]
+
+# print(df_filter.to_string(max_rows=50))
+
+df_filter['one_one_next'] = df_filter['one_one'].shift(-1)
+df_filter['zero_zero_next'] = df_filter['zero_zero'].shift(-1)
+df_filter['one_one_back'] = df_filter['one_one'].shift(1)
+df_filter['zero_zero_back'] = df_filter['zero_zero'].shift(1)
+# df_filter['end_next'] = df_filter['end'].shift(-1)
+# df_filter['pos_next'] = df_filter['POS'].shift(-1)
+
+not_na = df_filter[['one_one_next', 'one_one_back']].notna().all(axis=1)
+
+df_filter.loc[not_na, 'inter1'] = [list(sorted(set(a).intersection(b))) for a, b in
+                                     zip(df_filter.loc[not_na, 'one_one'], df_filter.loc[not_na, 'one_one_next'])]
+
+df_filter.loc[not_na, 'inter2'] = [list(sorted(set(a).intersection(b))) for a, b in
+                                     zip(df_filter.loc[not_na, 'one_one'], df_filter.loc[not_na, 'zero_zero_next'])]
+
+df_filter.loc[not_na, 'inter3'] = [list(sorted(set(a).intersection(b))) for a, b in
+                                     zip(df_filter.loc[not_na, 'zero_zero'], df_filter.loc[not_na, 'one_one_next'])]
+
+df_filter.loc[not_na, 'inter4'] = [list(sorted(set(a).intersection(b))) for a, b in
+                                     zip(df_filter.loc[not_na, 'zero_zero'], df_filter.loc[not_na, 'zero_zero_next'])]
+
+df_filter.loc[not_na, 'inter5'] = [list(sorted(set(a).intersection(b))) for a, b in
+                                     zip(df_filter.loc[not_na, 'one_one'], df_filter.loc[not_na, 'one_one_back'])]
+
+df_filter.loc[not_na, 'inter6'] = [list(sorted(set(a).intersection(b))) for a, b in
+                                     zip(df_filter.loc[not_na, 'one_one'], df_filter.loc[not_na, 'zero_zero_back'])]
+
+df_filter.loc[not_na, 'inter7'] = [list(sorted(set(a).intersection(b))) for a, b in
+                                     zip(df_filter.loc[not_na, 'zero_zero'], df_filter.loc[not_na, 'one_one_back'])]
+
+df_filter.loc[not_na, 'inter8'] = [list(sorted(set(a).intersection(b))) for a, b in
+                                     zip(df_filter.loc[not_na, 'zero_zero'], df_filter.loc[not_na, 'zero_zero_back'])]
+
+print(df_filter.to_string(max_rows=50))
+
+df_2_filter = df_filter.loc[~(((df_filter['inter1'] == df_filter['inter5']) & (df_filter['inter4'] == df_filter['inter8'])
+                              ) | df_filter['inter'])]
+
+print(df_2_filter.to_string(max_rows=50))
+
+# do dokończenia
+# df_filter = df_bins.loc[(len(df_bins['inter1']) >= 3 or len(df_bins['inter2']) >= 3) and (len(df_bins['inter3']) >= 3 or len(df_bins['inter4']) >= 3)]
+
+# df_filter = df_bins.loc[~(((df_bins['one_one'] == df_bins['one_one_next']) & (df_bins['zero_zero'] == df_bins['zero_zero_next'])
+#                         & (df_bins['one_one'] == df_bins['one_one_back']) & (df_bins['zero_zero'] == df_bins['zero_zero_back'])) |
+#                           ((df_bins['one_one'] == df_bins['zero_zero_next']) & (
+#                                       df_bins['zero_zero'] == df_bins['one_one_next'])
+#                            & (df_bins['one_one'] == df_bins['one_one_back']) & (
+#                                        df_bins['zero_zero'] == df_bins['zero_zero_back']))
+#                           )]
+
+
 #
 # rslt_df = dataframe.loc[(dataframe['Age'] == 21) &
 #               dataframe['Stream'].isin(options)]
