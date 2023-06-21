@@ -191,8 +191,9 @@ df_filter['one_one_back'] = df_filter['one_one'].shift(1)
 df_filter['zero_zero_back'] = df_filter['zero_zero'].shift(1)
 # df_filter['end_next'] = df_filter['end'].shift(-1)
 # df_filter['pos_next'] = df_filter['POS'].shift(-1)
+df_filter.fillna(0)
 
-not_na = df_filter[['one_one_next', 'one_one_back']].notna().all(axis=1)
+not_na = df_filter[['one_one_next', 'one_one_back', 'zero_zero_back', 'zero_zero_next']].notna().all(axis=1)
 
 df_filter.loc[not_na, 'inter1'] = [list(sorted(set(a).intersection(b))) for a, b in
                                      zip(df_filter.loc[not_na, 'one_one'], df_filter.loc[not_na, 'one_one_next'])]
@@ -218,15 +219,49 @@ df_filter.loc[not_na, 'inter7'] = [list(sorted(set(a).intersection(b))) for a, b
 df_filter.loc[not_na, 'inter8'] = [list(sorted(set(a).intersection(b))) for a, b in
                                      zip(df_filter.loc[not_na, 'zero_zero'], df_filter.loc[not_na, 'zero_zero_back'])]
 
-print(df_filter.to_string(max_rows=50))
 
-df_2_filter = df_filter.loc[~(((df_filter['inter1'] == df_filter['inter5']) & (df_filter['inter4'] == df_filter['inter8'])
-                              ) | df_filter['inter'])]
+df_filter.loc[not_na, 'start2'] = ['start' if ((len(a) >= 3 or len(b) >= 3) and (len(c) >= 3 or len(d) >= 3)) and
+                                              ((0 < len(e) < 3 or 0 < len(f) < 3) or (0 < len(g) < 3 or 0 < len(h) < 3)
+                                               or ((len(e) >= 3 or len(f) >= 3) and (len(g) == 0 and len(h) == 0))) else
+                                   '0' for a, b, c, d, e, f, g, h in zip(df_filter.loc[not_na, 'inter1'],
+                                                                       df_filter.loc[not_na, 'inter2'],
+                                                                       df_filter.loc[not_na, 'inter3'],
+                                                                       df_filter.loc[not_na, 'inter4'],
+                                                                       df_filter.loc[not_na, 'inter5'],
+                                                                       df_filter.loc[not_na, 'inter6'],
+                                                                       df_filter.loc[not_na, 'inter7'],
+                                                                       df_filter.loc[not_na, 'inter8'])]
+
+df_filter.loc[not_na, 'end2'] = ['end' if ((len(e) >= 3 or len(f) >= 3) and (len(g) >= 3 or len(h) >= 3)) and
+                                          ((0 < len(a) < 3 or 0 < len(b) < 3) or (0 < len(c) < 3 or 0 < len(d) < 3) or
+                                           ((len(a) >= 3 or len(b) >= 3) and (len(c) == 0 and len(d) == 0)) or
+                                           ((len(a) >= 3 and len(b) == 0) and (len(c) >= 3 and len(d) == 0))) else '0' for
+                                 a, b, c, d, e, f, g, h in zip(df_filter.loc[not_na, 'inter1'],
+                                                               df_filter.loc[not_na, 'inter2'],
+                                                               df_filter.loc[not_na, 'inter3'],
+                                                               df_filter.loc[not_na, 'inter4'],
+                                                               df_filter.loc[not_na, 'inter5'],
+                                                               df_filter.loc[not_na, 'inter6'],
+                                                               df_filter.loc[not_na, 'inter7'],
+                                                               df_filter.loc[not_na, 'inter8'])]
+
+df_filter_drop = df_filter.drop(['one_and_zero', 'one_zero_next', 'one_zero_back', 'one_one_back', 'one_one_next',
+                                 'zero_zero_back', 'zero_zero_next', 'inter1', 'inter2', 'inter3', 'inter4', 'inter5',
+                                 'inter6', 'inter7', 'inter8'], axis=1)
+
+print(df_filter_drop.to_string(max_rows=200))
+
+b = ['0']
+df_2_filter = (df_filter_drop.loc[~(df_filter_drop['start2'].isin(b) & df_filter_drop['end2'].isin(b))]).reset_index(drop=True)
+df_2_filter.loc[0, 'start2'] = 'start'
+df_2_filter.iloc[-1, 7] = 'end'
+
+# df_2_filter = df_filter.loc[~((df_filter['inter1'] == df_filter['inter5']) & (df_filter['inter4'] == df_filter['inter8']))]
 
 print(df_2_filter.to_string(max_rows=50))
 
 # do dokończenia
-# df_filter = df_bins.loc[(len(df_bins['inter1']) >= 3 or len(df_bins['inter2']) >= 3) and (len(df_bins['inter3']) >= 3 or len(df_bins['inter4']) >= 3)]
+# df_3_filter = df_filter.loc[(len(df_bins['inter1']) >= 3 or len(df_bins['inter2']) >= 3) and (len(df_bins['inter3']) >= 3 or len(df_bins['inter4']) >= 3)]
 
 # df_filter = df_bins.loc[~(((df_bins['one_one'] == df_bins['one_one_next']) & (df_bins['zero_zero'] == df_bins['zero_zero_next'])
 #                         & (df_bins['one_one'] == df_bins['one_one_back']) & (df_bins['zero_zero'] == df_bins['zero_zero_back'])) |
