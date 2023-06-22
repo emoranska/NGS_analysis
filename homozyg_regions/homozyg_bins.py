@@ -168,12 +168,12 @@ df_start_end = (df_part.loc[(df_part['start'] == 'start') | (df_part['end'] == '
     drop(['pos_back', 'pos_next', 'one_one_back', 'one_one_next', 'zero_zero_back', 'zero_zero_next', 'inter1',
           'inter2', 'inter3', 'inter4', 'inter5', 'inter6', 'inter7', 'inter8'], axis=1)
 
-print(df_start_end.to_string(max_rows=150))
+# print(df_start_end.to_string(max_rows=150))
 
 a = ['start', 'end']
 df_bins = df_start_end[~(df_start_end['start'].isin(a) & (df_start_end['end'].isin(a)))]
 
-print(df_bins.to_string(max_rows=200))
+# print(df_bins.to_string(max_rows=200))
 
 df_bins['one_and_zero'] = (df_bins['one_one'] + df_bins['zero_zero']).apply(sorted)
 df_bins['one_zero_next'] = df_bins['one_and_zero'].shift(-1)
@@ -249,7 +249,7 @@ df_filter_drop = df_filter.drop(['one_and_zero', 'one_zero_next', 'one_zero_back
                                  'zero_zero_back', 'zero_zero_next', 'inter1', 'inter2', 'inter3', 'inter4', 'inter5',
                                  'inter6', 'inter7', 'inter8'], axis=1)
 
-print(df_filter_drop.to_string(max_rows=200))
+# print(df_filter_drop.to_string(max_rows=200))
 
 b = ['0']
 df_2_filter = (df_filter_drop.loc[~(df_filter_drop['start2'].isin(b) & df_filter_drop['end2'].isin(b))]).reset_index(drop=True)
@@ -258,7 +258,27 @@ df_2_filter.iloc[-1, 7] = 'end'
 
 # df_2_filter = df_filter.loc[~((df_filter['inter1'] == df_filter['inter5']) & (df_filter['inter4'] == df_filter['inter8']))]
 
-print(df_2_filter.to_string(max_rows=50))
+print(df_2_filter.to_string(max_rows=300))
+
+df_2_filter['end2_ok'] = df_2_filter['end2'].shift(-1)
+df_2_filter['pos_end2ok'] = df_2_filter['POS'].shift(-1)
+df_2_filter['one_one_end2ok'] = df_2_filter['one_one'].shift(-1)
+df_2_filter['zero_zero_end2ok'] = df_2_filter['zero_zero'].shift(-1)
+
+df_2_filter_drop = df_2_filter.drop(['start', 'end'], axis=1)
+
+print(df_2_filter_drop.to_string(max_rows=200))
+
+df_final = (df_2_filter_drop.loc[(df_2_filter_drop['start2'].isin(a) & df_2_filter_drop['end2_ok'].isin(a))]).\
+    reset_index(drop=True).drop(['end2'], axis=1)
+print(df_final.to_string(max_rows=100))
+
+df_final_2 = df_final.drop(['start2', 'end2_ok'], axis=1).rename(columns={'POS':'start', 'pos_end2ok':'end',
+                                                                  'one_one': '1/1_start', 'zero_zero': '0/0_start',
+                                                                  'one_one_end2ok': '1/1_end', 'zero_zero_end2ok': '0/0_end'}).\
+    reindex(columns=['CHROM', 'start', 'end', '1/1_start', '0/0_start', '1/1_end', '0/0_end'])
+
+print(df_final_2.to_string(max_rows=100))
 
 # do dokończenia
 # df_3_filter = df_filter.loc[(len(df_bins['inter1']) >= 3 or len(df_bins['inter2']) >= 3) and (len(df_bins['inter3']) >= 3 or len(df_bins['inter4']) >= 3)]
@@ -276,6 +296,6 @@ print(df_2_filter.to_string(max_rows=50))
 # rslt_df = dataframe.loc[(dataframe['Age'] == 21) &
 #               dataframe['Stream'].isin(options)]
 
-# df_start_end.to_csv('P1_bins_test_chr1_3.csv', sep='\t', index=False)
+# df_2_filter.to_csv('P1_start_end_test_chr1_3.csv', sep='\t', index=False)
 
 print("--- %s seconds ---" % (time.time() - start_time))
