@@ -271,14 +271,106 @@ print(df_2_filter_drop.to_string(max_rows=200))
 
 df_final = (df_2_filter_drop.loc[(df_2_filter_drop['start2'].isin(a) & df_2_filter_drop['end2_ok'].isin(a))]).\
     reset_index(drop=True).drop(['end2'], axis=1)
-print(df_final.to_string(max_rows=100))
+# print(df_final.to_string(max_rows=100))
 
 df_final_2 = df_final.drop(['start2', 'end2_ok'], axis=1).rename(columns={'POS':'start', 'pos_end2ok':'end',
                                                                   'one_one': '1/1_start', 'zero_zero': '0/0_start',
                                                                   'one_one_end2ok': '1/1_end', 'zero_zero_end2ok': '0/0_end'}).\
     reindex(columns=['CHROM', 'start', 'end', '1/1_start', '0/0_start', '1/1_end', '0/0_end'])
 
+# print(df_final_2.to_string(max_rows=100))
+
+all_bins = df_final_2.all(axis=1)
+
+df_final_2.loc[all_bins, 'inter_1/1'] = [list(sorted(set(a).intersection(b))) for a, b in
+                                     zip(df_final_2.loc[all_bins, '1/1_start'], df_final_2.loc[all_bins, '1/1_end'])]
+
+df_final_2.loc[all_bins, 'inter_0/0'] = [list(sorted(set(a).intersection(b))) for a, b in
+                                     zip(df_final_2.loc[all_bins, '0/0_start'], df_final_2.loc[all_bins, '0/0_end'])]
+
 print(df_final_2.to_string(max_rows=100))
+
+# df[df.c.map(len)>1]
+
+df_inter_11_00 = df_final_2[(df_final_2['inter_1/1'].map(len) >= 3) & (df_final_2['inter_0/0'].map(len) >= 3)].\
+    reset_index(drop=True).drop(['1/1_start', '0/0_start', '1/1_end', '0/0_end'], axis=1).\
+    rename(columns={'inter_1/1':'1/1','inter_0/0':'0/0'})
+
+print(df_inter_11_00.to_string(max_rows=50))
+
+df_rest_inter_11_00 = df_final_2[~((df_final_2['inter_1/1'].map(len) >= 3) & (df_final_2['inter_0/0'].map(len) >= 3))]
+
+df_rest_inter_11_00.loc[all_bins, 'inter_1/1_0/0'] = [list(sorted(set(a).intersection(b))) for a, b in
+                                     zip(df_rest_inter_11_00.loc[all_bins, '1/1_start'],
+                                         df_rest_inter_11_00.loc[all_bins, '0/0_end'])]
+
+df_rest_inter_11_00.loc[all_bins, 'inter_0/0_1/1'] = [list(sorted(set(a).intersection(b))) for a, b in
+                                     zip(df_rest_inter_11_00.loc[all_bins, '0/0_start'],
+                                         df_rest_inter_11_00.loc[all_bins, '1/1_end'])]
+
+print(df_rest_inter_11_00.to_string(max_rows=50))
+
+df_inter_cross_11_00 = df_rest_inter_11_00[(df_rest_inter_11_00['inter_1/1_0/0'].map(len) >= 3) &
+                                           (df_rest_inter_11_00['inter_0/0_1/1'].map(len) >= 3)].\
+    reset_index(drop=True).drop(['1/1_start', '0/0_start', '1/1_end', '0/0_end', 'inter_1/1', 'inter_0/0'], axis=1).\
+    rename(columns={'inter_1/1_0/0':'1/1','inter_0/0_1/1':'0/0'})
+
+print(df_inter_cross_11_00.to_string(max_rows=50))
+
+df_other_11_00 = df_rest_inter_11_00[~((df_rest_inter_11_00['inter_1/1_0/0'].map(len) >= 3) &
+                                       (df_rest_inter_11_00['inter_0/0_1/1'].map(len) >= 3))].reset_index(drop=True)
+print(df_other_11_00.to_string())
+
+df_other_11_00_filter = df_other_11_00[(((df_other_11_00['inter_1/1'].map(len) >= 2) &
+                                       (df_other_11_00['inter_0/0'].map(len) >= 2)) |
+                                       ((df_other_11_00['inter_1/1_0/0'].map(len) >= 2) &
+                                       (df_other_11_00['inter_0/0_1/1'].map(len) >= 2)))]
+print(df_other_11_00_filter.to_string())
+
+all_bins_2 = df_other_11_00.all(axis=1)
+
+# df_other_11_00_filter['rest_inter_0/0_1/1'] = list(sorted(set(a) ^ set(b)) for a, b in
+#                                      zip(df_other_11_00_filter['0/0_start'],
+#                                          df_other_11_00_filter['1/1_end']))
+
+df_other_11_00_filter['rest_inter_1/1'] = list(sorted(set(a) ^ set(b)) if len(c) == 2 else [] for a, b, c in
+                                     zip(df_other_11_00_filter['1/1_start'],
+                                         df_other_11_00_filter['1/1_end'], df_other_11_00_filter['inter_1/1']))
+
+df_other_11_00_filter['rest_inter_0/0'] = list(sorted(set(a) ^ set(b)) if len(c) == 2 else [] for a, b, c in
+                                     zip(df_other_11_00_filter['0/0_start'],
+                                         df_other_11_00_filter['0/0_end'], df_other_11_00_filter['inter_0/0']))
+
+df_other_11_00_filter['rest_inter_1/1_0/0'] = list(sorted(set(a) ^ set(b)) if len(c) == 2 else [] for a, b, c in
+                                     zip(df_other_11_00_filter['1/1_start'],
+                                         df_other_11_00_filter['0/0_end'], df_other_11_00_filter['inter_1/1_0/0']))
+
+df_other_11_00_filter['rest_inter_0/0_1/1'] = list(sorted(set(a) ^ set(b)) if len(c) == 2 else [] for a, b, c in
+                                     zip(df_other_11_00_filter['0/0_start'],
+                                         df_other_11_00_filter['1/1_end'], df_other_11_00_filter['inter_0/0_1/1']))
+
+# loc1['location'] = (loc1['loc_1']  + loc1['loc_2']).apply(set)
+
+df_other_11_00_filter['rest'] = (df_other_11_00_filter['rest_inter_1/1'] + df_other_11_00_filter['rest_inter_0/0'] +
+                                 df_other_11_00_filter['rest_inter_1/1_0/0'] +
+                                 df_other_11_00_filter['rest_inter_0/0_1/1']).apply(set).apply(sorted)
+
+df_other_11_00_filter['1/1'] = (df_other_11_00_filter['inter_1/1'] + df_other_11_00_filter['inter_1/1_0/0']).apply(set).apply(sorted)
+df_other_11_00_filter['0/0'] = (df_other_11_00_filter['inter_0/0'] + df_other_11_00_filter['inter_0/0_1/1']).apply(set).apply(sorted)
+
+print(df_other_11_00_filter.to_string())
+
+df_other_11_00_filter_final = df_other_11_00_filter.drop(['1/1_start', '0/0_start', '1/1_end', '0/0_end', 'inter_1/1',
+                                                          'inter_0/0', 'inter_1/1_0/0', 'inter_0/0_1/1',
+                                                          'rest_inter_1/1', 'rest_inter_0/0', 'rest_inter_1/1_0/0',
+                                                          'rest_inter_0/0_1/1'], axis=1).reset_index(drop=True).\
+    reindex(columns=['CHROM', 'start', 'end', '1/1', '0/0', 'rest'])
+
+
+# df_other_11_00_filter['rest_inter_0/0_1/1'] = list([(set(a) ^ set(b)) for a, b in
+#                                      zip(df_other_11_00_filter['0/0_start'],
+#                                          df_other_11_00_filter['1/1_end'])])
+print(df_other_11_00_filter_final.to_string())
 
 # do dokończenia
 # df_3_filter = df_filter.loc[(len(df_bins['inter1']) >= 3 or len(df_bins['inter2']) >= 3) and (len(df_bins['inter3']) >= 3 or len(df_bins['inter4']) >= 3)]
