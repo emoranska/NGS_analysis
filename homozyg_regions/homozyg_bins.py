@@ -5,7 +5,7 @@ import time
 start_time = time.time()
 
 # open vcf file as pandas df
-vf = pyvcf.VcfFrame.from_file('P1_chr1_3_homozyg_reg.vcf')
+vf = pyvcf.VcfFrame.from_file('P4_EL10_chr1_9_homozyg_reg.vcf')
 df = vf.df
 
 # create columns with POS back and next
@@ -13,7 +13,8 @@ df['pos_back'] = df['POS'].shift(1)
 df['pos_next'] = df['POS'].shift(-1)
 
 # create columns with strings of samples with 1/1 and 0/0 respectively
-cols = df.filter(like='P1-').columns
+# cols = df.filter(like='P1-').columns
+cols = df.filter(like='P4-').columns
 sep = ','
 df['one_one'] = pd.Series(df[cols].eq('1/1').dot((cols + sep))).str.rstrip(sep)
 df['zero_zero'] = pd.Series(df[cols].eq('0/0').dot((cols + sep))).str.rstrip(sep)
@@ -30,10 +31,14 @@ df['zero_zero'] = df['zero_zero'].str.split(',')
 print(df.loc[1, 'one_one_back'], type(df.loc[0, 'one_one_back']))
 # print(df.to_string(max_rows=20))
 
-# remove useless columns
-df_part = df.drop(['ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'P1-25', 'P1-93', 'P1-88', 'P1-6',
-                   'P1-89', 'P1-26', 'P1-12', 'P1-92', 'P1-22', 'P1-90', 'P1-28', 'P1-95'], axis=1)
+# remove useless columns for P1
+# df_part = df.drop(['ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'P1-25', 'P1-93', 'P1-88', 'P1-6',
+#                    'P1-89', 'P1-26', 'P1-12', 'P1-92', 'P1-22', 'P1-90', 'P1-28', 'P1-95'], axis=1)
 # print(df_part.to_string(max_rows=20))
+
+# remove useless columns for P4
+df_part = df.drop(['ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'P4-1', 'P4-56', 'P4-7', 'P4-60',
+                   'P4-46', 'P4-47', 'P4-35', 'P4-29', 'P4-64', 'P4-15', 'P4-32', 'P4-62'], axis=1)
 
 df_part.fillna(0)
 notna_only = df_part[['one_one', 'zero_zero', 'pos_back', 'pos_next', 'one_one_back', 'zero_zero_back', 'one_one_next',
@@ -185,7 +190,7 @@ df_2_filter.loc[0, 'start2'] = 'start'
 df_2_filter.iloc[-1, 7] = 'end'
 # print(df_2_filter.to_string(max_rows=300))
 
-# create columns with parameters of ends of hmozygosity regions (from next rows)
+# create columns with parameters of ends of homozygosity regions (from next rows)
 df_2_filter['end2_ok'] = df_2_filter['end2'].shift(-1)
 df_2_filter['pos_end2ok'] = df_2_filter['POS'].shift(-1)
 df_2_filter['one_one_end2ok'] = df_2_filter['one_one'].shift(-1)
@@ -284,15 +289,20 @@ df_other_11_00_filter['rest'] = (df_other_11_00_filter['rest_inter_1/1'] + df_ot
 # merge columns for records containing only 2 samples for 1/1 or 0/0 with correct samples with 1/1 and 0/0 into one
 df_other_11_00_filter['1/1'] = (df_other_11_00_filter['inter_1/1'] + df_other_11_00_filter['inter_1/1_0/0']).apply(set).apply(sorted)
 df_other_11_00_filter['0/0'] = (df_other_11_00_filter['inter_0/0'] + df_other_11_00_filter['inter_0/0_1/1']).apply(set).apply(sorted)
-
 # print(df_other_11_00_filter.to_string())
 
 df_other_11_00_filter_final = df_other_11_00_filter.drop(['1/1_start', '0/0_start', '1/1_end', '0/0_end', 'inter_1/1',
                                                           'inter_0/0', 'inter_1/1_0/0', 'inter_0/0_1/1',
                                                           'rest_inter_1/1', 'rest_inter_0/0', 'rest_inter_1/1_0/0',
                                                           'rest_inter_0/0_1/1'], axis=1).reset_index(drop=True).\
-    reindex(columns=['CHROM', 'start', 'end', '1/1', '0/0', 'rest'])
+    reindex(columns=['CHROM', 'start', 'end', '1/1', '0/0', 'rest']).rename(columns={'CHROM':'chr'})
 print(df_other_11_00_filter_final.to_string())
-# df_2_filter.to_csv('P1_start_end_test_chr1_3.csv', sep='\t', index=False)
+
+homozyg_bins = pd.concat([df_inter_11_00, df_inter_cross_11_00], ignore_index=True).sort_values(by=['CHROM', 'start']).\
+    rename(columns={'CHROM':'chr'}).reset_index(drop=True)
+print(homozyg_bins.to_string(max_rows=50))
+
+homozyg_bins.to_csv('P4_EL10_chr1_9_homozyg_bins.csv', sep='\t', index=True)
+df_other_11_00_filter_final.to_csv('P4_EL10_chr1_9_homozyg_bins_rest.csv', sep='\t', index=True)
 
 print("--- %s seconds ---" % (time.time() - start_time))
