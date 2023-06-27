@@ -4,78 +4,44 @@ import time
 
 start_time = time.time()
 
-# vf = pyvcf.VcfFrame.from_file('P1_chr1_100_homozyg_reg.vcf')
+# open vcf file as pandas df
 vf = pyvcf.VcfFrame.from_file('P1_chr1_3_homozyg_reg.vcf')
-print(type(vf))
 df = vf.df
-print(type(df))
 
-# print(df.iloc[0,11], type(df.iloc[0, 11]))
-
-# df['1/1'] = df.apply(lambda x: x[9:] == '1/1', axis=1)
-# i = df.apply(lambda x: 1 if df.loc[x, 'P1-25'] == '1/1' else 0, axis=1)
-# df['1/1'] = df[i]
-
-# df['1/1'] = ['P1-25' if x == '1/1' else 0 for x in df['P1-25']]
-# print(df)
-
+# create columns with POS back and next
 df['pos_back'] = df['POS'].shift(1)
 df['pos_next'] = df['POS'].shift(-1)
 
+# create columns with strings of samples with 1/1 and 0/0 respectively
 cols = df.filter(like='P1-').columns
 sep = ','
 df['one_one'] = pd.Series(df[cols].eq('1/1').dot((cols + sep))).str.rstrip(sep)
 df['zero_zero'] = pd.Series(df[cols].eq('0/0').dot((cols + sep))).str.rstrip(sep)
-
 # print(df.to_string())
-#
 
+# create columns with lists of samples for 1/1, 0/0, next and back respectively
 df['one_one_back'] = df['one_one'].shift(1).str.split(',')
 df['one_one_next'] = df['one_one'].shift(-1).str.split(',')
 df['zero_zero_back'] = df['zero_zero'].shift(1).str.split(',')
 df['zero_zero_next'] = df['zero_zero'].shift(-1).str.split(',')
-
 df['one_one'] = df['one_one'].str.split(',')
 df['zero_zero'] = df['zero_zero'].str.split(',')
 
-# print(df.loc[0, 'one_one'], type(df.loc[0, 'one_one']))
 print(df.loc[1, 'one_one_back'], type(df.loc[0, 'one_one_back']))
-# print(df.loc[1, 'zero_zero_next'], type(df.loc[1, 'zero_zero_next']))
-#
-# for x in df.loc[1, 'one_one_back']:
-#     print(x, type(x))
-
 # print(df.to_string(max_rows=20))
 
-# df['one_one'] = df.apply(lambda row: set(row['one_one']), axis=1)
-# df['one_one_back'] = df.apply(lambda row: set(row['one_one_back']), axis=1)
-# df['check'] = df.apply(lambda row: row['one_one'] in row['one_one_back'], axis=1)
-
-# df['start_end'] = df.query("pos - pos_back > 10000")
-# df['start_end'] = ['start' if x.pos - x.pos_back > 10000 else 0 for x in df]
-
-# for x in df.itertuples():
-#     # if x.POS > x.pos_back:
-#     if x.one_one in x.one_one_back:
-#         df['start_end'] = 'start'
-#     else:
-#         df['start_end'] = 0
-
+# remove useless columns
 df_part = df.drop(['ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'P1-25', 'P1-93', 'P1-88', 'P1-6',
                    'P1-89', 'P1-26', 'P1-12', 'P1-92', 'P1-22', 'P1-90', 'P1-28', 'P1-95'], axis=1)
-
 # print(df_part.to_string(max_rows=20))
 
-# df_part['common_one_next'] = [set(a).intersection(b) for a, b in zip(df_part.one_one, df_part.one_one_back)]
-
-# FOR FIND STARTS OF REGIONS OF HOMOZYGOSITY - METHOD 1
 df_part.fillna(0)
-
 notna_only = df_part[['one_one', 'zero_zero', 'pos_back', 'pos_next', 'one_one_back', 'zero_zero_back', 'one_one_next',
                       'zero_zero_next']].notna().all(axis=1)
 df_part.loc[notna_only, 'one_one'] = [sorted(a) for a in df_part.loc[notna_only, 'one_one']]
 df_part.loc[notna_only, 'zero_zero'] = [sorted(a) for a in df_part.loc[notna_only, 'zero_zero']]
 
+# create columns with intersections of current, back and next samples for 1/1 and 0/0 to be able to filter df
 df_part.loc[notna_only, 'inter1'] = [list(sorted(set(a).intersection(b))) for a, b in
                                      zip(df_part.loc[notna_only, 'one_one'], df_part.loc[notna_only, 'one_one_next'])]
 
@@ -100,23 +66,8 @@ df_part.loc[notna_only, 'inter7'] = [list(sorted(set(a).intersection(b))) for a,
 df_part.loc[notna_only, 'inter8'] = [list(sorted(set(a).intersection(b))) for a, b in
                             zip(df_part.loc[notna_only, 'zero_zero'], df_part.loc[notna_only, 'zero_zero_back'])]
 
-# df_part.loc[notna_only, 'start'] = ['start' if a - b > 10000 and (len(c) >= 3 or len(d) >= 3) and
-#                                                  (len(e) >= 3 or len(f) >= 3) else 0 for a, b, c, d, e, f
-#                                         in zip(df_part.loc[notna_only, 'POS'], df_part.loc[notna_only, 'pos_back'],
-#                                                df_part.loc[notna_only, 'inter1'], df_part.loc[notna_only, 'inter2'],
-#                                                df_part.loc[notna_only, 'inter3'],
-#                                                df_part.loc[notna_only, 'inter4'])]
-
-# df_part.loc[notna_only, 'start'] =  ['start' if ((a-b) > 10000 and (c-a) < 10000) and (len(d) >= 3 or len(e) >= 3)
-#                                     and (len(f) >= 3 or len(g) >= 3) and ((len(h) < 3 or len(i) < 3) or
-#                                     (len(j) < 3 or len(k) < 3)) else 0 for a, b, c, d, e, f, g, h, i, j, k
-#                                     in zip(df_part.loc[notna_only, 'POS'], df_part.loc[notna_only, 'pos_back'],
-#                                     df_part.loc[notna_only, 'pos_next'], df_part.loc[notna_only, 'inter1'],
-#                                     df_part.loc[notna_only, 'inter2'], df_part.loc[notna_only, 'inter3'],
-#                                     df_part.loc[notna_only, 'inter4'], df_part.loc[notna_only, 'inter5'],
-#                                     df_part.loc[notna_only, 'inter6'], df_part.loc[notna_only, 'inter7'],
-#                                     df_part.loc[notna_only, 'inter8'])]
-
+# find start points based of distance between next and current POS and length of lists with intersections of samples
+# for 1/1 and 0/0
 df_part.loc[notna_only, 'start'] = ['start' if (c-a) < 10000 and (len(d) >= 3 or len(e) >= 3)
                                     and (len(f) >= 3 or len(g) >= 3) and ((len(h) < 3 or len(i) < 3) or
                                     (len(j) < 3 or len(k) < 3)) else 0 for a, b, c, d, e, f, g, h, i, j, k
@@ -127,27 +78,8 @@ df_part.loc[notna_only, 'start'] = ['start' if (c-a) < 10000 and (len(d) >= 3 or
                                     df_part.loc[notna_only, 'inter6'], df_part.loc[notna_only, 'inter7'],
                                     df_part.loc[notna_only, 'inter8'])]
 
-# df_part.loc[notna_only, 'check'] = [set(a) <= set(b) for a, b in
-#                             zip(df_part.loc[notna_only, 'one_one'], df_part.loc[notna_only, 'one_one_back'])]
-
-# FOR FIND ENDS OF REGIONS OF HOMOZYGOSITY - METHOD 1
-# df_part.loc[notna_only, 'end'] = ['end' if b - a > 10000 and (len(c) >= 3 or len(d) >= 3) and
-#                                                  (len(e) >= 3 or len(f) >= 3) else 0 for a, b, c, d, e, f
-#                                         in zip(df_part.loc[notna_only, 'POS'], df_part.loc[notna_only, 'pos_next'],
-#                                                df_part.loc[notna_only, 'inter5'], df_part.loc[notna_only, 'inter6'],
-#                                                df_part.loc[notna_only, 'inter7'],
-#                                                df_part.loc[notna_only, 'inter8'])]
-
-# df_part.loc[notna_only, 'end'] = ['end' if ((c-a) > 10000 and (a-b) < 10000) and (len(h) >= 3 or len(i) >= 3)
-#                             and (len(j) >= 3 or len(k) >= 3) and ((len(d) < 3 or len(e) < 3) or len(f) < 3 or
-#                                     len(g) < 3) else 0 for a, b, c, d, e, f, g, h, i, j, k
-#                                     in zip(df_part.loc[notna_only, 'POS'], df_part.loc[notna_only, 'pos_back'],
-#                             df_part.loc[notna_only, 'pos_next'], df_part.loc[notna_only, 'inter1'],
-#                                     df_part.loc[notna_only, 'inter2'], df_part.loc[notna_only, 'inter3'],
-#                                     df_part.loc[notna_only, 'inter4'], df_part.loc[notna_only, 'inter5'],
-#                                     df_part.loc[notna_only, 'inter6'], df_part.loc[notna_only, 'inter7'],
-#                                     df_part.loc[notna_only, 'inter8'])]
-
+# find ends based of distance between current and back POS and length of lists with intersections of samples for 1/1
+# and 0/0
 df_part.loc[notna_only, 'end'] = ['end' if (a-b) < 10000 and (len(h) >= 3 or len(i) >= 3) and (len(j) >= 3 or len(k) >= 3) and
                                            ((len(d) < 3 or len(e) < 3) or len(f) < 3 or len(g) < 3) else 0
                                   for a, b, c, d, e, f, g, h, i, j, k
@@ -157,42 +89,35 @@ df_part.loc[notna_only, 'end'] = ['end' if (a-b) < 10000 and (len(h) >= 3 or len
                                   df_part.loc[notna_only, 'inter4'], df_part.loc[notna_only, 'inter5'],
                                   df_part.loc[notna_only, 'inter6'], df_part.loc[notna_only, 'inter7'],
                                   df_part.loc[notna_only, 'inter8'])]
-
 # print(df_part.to_string(max_rows=320))
 
-# df_part['start'] = df_part[df_part['start'] == 'start']
-#
-# df_start_end = df_part['chr', 'pos', 'start', 'end']
-
+# filter records containting 'start' OR 'end' and drop useless columns
 df_start_end = (df_part.loc[(df_part['start'] == 'start') | (df_part['end'] == 'end')]).\
     drop(['pos_back', 'pos_next', 'one_one_back', 'one_one_next', 'zero_zero_back', 'zero_zero_next', 'inter1',
           'inter2', 'inter3', 'inter4', 'inter5', 'inter6', 'inter7', 'inter8'], axis=1)
-
 # print(df_start_end.to_string(max_rows=150))
 
+# remove records with 'start' and 'end' simultaneously
 a = ['start', 'end']
 df_bins = df_start_end[~(df_start_end['start'].isin(a) & (df_start_end['end'].isin(a)))]
 
-# print(df_bins.to_string(max_rows=200))
-
+# create column with one common list of samples for 1/1 and 0/0 and then, with next and back list of samples
 df_bins['one_and_zero'] = (df_bins['one_one'] + df_bins['zero_zero']).apply(sorted)
 df_bins['one_zero_next'] = df_bins['one_and_zero'].shift(-1)
 df_bins['one_zero_back'] = df_bins['one_and_zero'].shift(1)
 
-# remove rows with the same samples in 1/1 and 0/0 inside the region of homozygosity
+# remove rows with the same samples for 1/1 and 0/0 inside the region of homozygosity (between start and end points)
 df_filter = df_bins.loc[~((df_bins['one_and_zero'] == df_bins['one_zero_next']) &
                           (df_bins['one_and_zero'] == df_bins['one_zero_back']))]
 
-# print(df_filter.to_string(max_rows=50))
-
+# create columns with next or back samples for 1/1 and 0/0
 df_filter['one_one_next'] = df_filter['one_one'].shift(-1)
 df_filter['zero_zero_next'] = df_filter['zero_zero'].shift(-1)
 df_filter['one_one_back'] = df_filter['one_one'].shift(1)
 df_filter['zero_zero_back'] = df_filter['zero_zero'].shift(1)
-# df_filter['end_next'] = df_filter['end'].shift(-1)
-# df_filter['pos_next'] = df_filter['POS'].shift(-1)
 df_filter.fillna(0)
 
+# create columns with intersections of current, back and next samples for 1/1 and 0/0 to be able to filter df
 not_na = df_filter[['one_one_next', 'one_one_back', 'zero_zero_back', 'zero_zero_next']].notna().all(axis=1)
 
 df_filter.loc[not_na, 'inter1'] = [list(sorted(set(a).intersection(b))) for a, b in
@@ -220,6 +145,7 @@ df_filter.loc[not_na, 'inter8'] = [list(sorted(set(a).intersection(b))) for a, b
                                      zip(df_filter.loc[not_na, 'zero_zero'], df_filter.loc[not_na, 'zero_zero_back'])]
 
 
+# create new 'start' and 'end' columns for filtered df
 df_filter.loc[not_na, 'start2'] = ['start' if ((len(a) >= 3 or len(b) >= 3) and (len(c) >= 3 or len(d) >= 3)) and
                                               ((0 < len(e) < 3 or 0 < len(f) < 3) or (0 < len(g) < 3 or 0 < len(h) < 3)
                                                or ((len(e) >= 3 or len(f) >= 3) and (len(g) == 0 and len(h) == 0))) else
@@ -248,31 +174,33 @@ df_filter.loc[not_na, 'end2'] = ['end' if ((len(e) >= 3 or len(f) >= 3) and (len
 df_filter_drop = df_filter.drop(['one_and_zero', 'one_zero_next', 'one_zero_back', 'one_one_back', 'one_one_next',
                                  'zero_zero_back', 'zero_zero_next', 'inter1', 'inter2', 'inter3', 'inter4', 'inter5',
                                  'inter6', 'inter7', 'inter8'], axis=1)
-
 # print(df_filter_drop.to_string(max_rows=200))
 
+# remove records containing 0 in 'start2' and 'end2' columns (NOT start and end of homozygosity regions)
 b = ['0']
 df_2_filter = (df_filter_drop.loc[~(df_filter_drop['start2'].isin(b) & df_filter_drop['end2'].isin(b))]).reset_index(drop=True)
+
+# insert 'start' into the first record and 'end' for the last one
 df_2_filter.loc[0, 'start2'] = 'start'
 df_2_filter.iloc[-1, 7] = 'end'
+# print(df_2_filter.to_string(max_rows=300))
 
-# df_2_filter = df_filter.loc[~((df_filter['inter1'] == df_filter['inter5']) & (df_filter['inter4'] == df_filter['inter8']))]
-
-print(df_2_filter.to_string(max_rows=300))
-
+# create columns with parameters of ends of hmozygosity regions (from next rows)
 df_2_filter['end2_ok'] = df_2_filter['end2'].shift(-1)
 df_2_filter['pos_end2ok'] = df_2_filter['POS'].shift(-1)
 df_2_filter['one_one_end2ok'] = df_2_filter['one_one'].shift(-1)
 df_2_filter['zero_zero_end2ok'] = df_2_filter['zero_zero'].shift(-1)
 
 df_2_filter_drop = df_2_filter.drop(['start', 'end'], axis=1)
+# print(df_2_filter_drop.to_string(max_rows=200))
 
-print(df_2_filter_drop.to_string(max_rows=200))
-
+# filter rows containing start in 'start2' and end in 'end2_ok'
 df_final = (df_2_filter_drop.loc[(df_2_filter_drop['start2'].isin(a) & df_2_filter_drop['end2_ok'].isin(a))]).\
     reset_index(drop=True).drop(['end2'], axis=1)
 # print(df_final.to_string(max_rows=100))
 
+# create df with records as regions of homozygosity (chrom, start, end and samples for 1/1 and 0/0 start and end
+# positions
 df_final_2 = df_final.drop(['start2', 'end2_ok'], axis=1).rename(columns={'POS':'start', 'pos_end2ok':'end',
                                                                   'one_one': '1/1_start', 'zero_zero': '0/0_start',
                                                                   'one_one_end2ok': '1/1_end', 'zero_zero_end2ok': '0/0_end'}).\
@@ -280,6 +208,7 @@ df_final_2 = df_final.drop(['start2', 'end2_ok'], axis=1).rename(columns={'POS':
 
 # print(df_final_2.to_string(max_rows=100))
 
+# create columns with intersection of samples for 1/1 (start and end) and 0/0 (start and end)
 all_bins = df_final_2.all(axis=1)
 
 df_final_2.loc[all_bins, 'inter_1/1'] = [list(sorted(set(a).intersection(b))) for a, b in
@@ -287,29 +216,31 @@ df_final_2.loc[all_bins, 'inter_1/1'] = [list(sorted(set(a).intersection(b))) fo
 
 df_final_2.loc[all_bins, 'inter_0/0'] = [list(sorted(set(a).intersection(b))) for a, b in
                                      zip(df_final_2.loc[all_bins, '0/0_start'], df_final_2.loc[all_bins, '0/0_end'])]
+# print(df_final_2.to_string(max_rows=100))
 
-print(df_final_2.to_string(max_rows=100))
-
-# df[df.c.map(len)>1]
-
+# create final df with records containing at least 3 samples for 1/1 and 0/0, the same for start and end
 df_inter_11_00 = df_final_2[(df_final_2['inter_1/1'].map(len) >= 3) & (df_final_2['inter_0/0'].map(len) >= 3)].\
     reset_index(drop=True).drop(['1/1_start', '0/0_start', '1/1_end', '0/0_end'], axis=1).\
     rename(columns={'inter_1/1':'1/1','inter_0/0':'0/0'})
 
 print(df_inter_11_00.to_string(max_rows=50))
 
+# filter records NOT containing at least 3 samples for 1/1 and 0/0, the same for start and end
 df_rest_inter_11_00 = df_final_2[~((df_final_2['inter_1/1'].map(len) >= 3) & (df_final_2['inter_0/0'].map(len) >= 3))]
 
+# create column with intersection of samples for 1/1_start and 0/0_end (crosswise)
 df_rest_inter_11_00.loc[all_bins, 'inter_1/1_0/0'] = [list(sorted(set(a).intersection(b))) for a, b in
                                      zip(df_rest_inter_11_00.loc[all_bins, '1/1_start'],
                                          df_rest_inter_11_00.loc[all_bins, '0/0_end'])]
 
+# create columns with intersection of samples for 0/0_start and 1/1_end (crosswise)
 df_rest_inter_11_00.loc[all_bins, 'inter_0/0_1/1'] = [list(sorted(set(a).intersection(b))) for a, b in
                                      zip(df_rest_inter_11_00.loc[all_bins, '0/0_start'],
                                          df_rest_inter_11_00.loc[all_bins, '1/1_end'])]
 
-print(df_rest_inter_11_00.to_string(max_rows=50))
+# print(df_rest_inter_11_00.to_string(max_rows=50))
 
+# create final df containing records with at least 3 samples for 1/1 and 0/0 crosswise for start and end
 df_inter_cross_11_00 = df_rest_inter_11_00[(df_rest_inter_11_00['inter_1/1_0/0'].map(len) >= 3) &
                                            (df_rest_inter_11_00['inter_0/0_1/1'].map(len) >= 3)].\
     reset_index(drop=True).drop(['1/1_start', '0/0_start', '1/1_end', '0/0_end', 'inter_1/1', 'inter_0/0'], axis=1).\
@@ -317,22 +248,18 @@ df_inter_cross_11_00 = df_rest_inter_11_00[(df_rest_inter_11_00['inter_1/1_0/0']
 
 print(df_inter_cross_11_00.to_string(max_rows=50))
 
+# filter records with 1/1 or 0/0 containing only 2 samples
 df_other_11_00 = df_rest_inter_11_00[~((df_rest_inter_11_00['inter_1/1_0/0'].map(len) >= 3) &
                                        (df_rest_inter_11_00['inter_0/0_1/1'].map(len) >= 3))].reset_index(drop=True)
-print(df_other_11_00.to_string())
+# print(df_other_11_00.to_string())
 
 df_other_11_00_filter = df_other_11_00[(((df_other_11_00['inter_1/1'].map(len) >= 2) &
                                        (df_other_11_00['inter_0/0'].map(len) >= 2)) |
                                        ((df_other_11_00['inter_1/1_0/0'].map(len) >= 2) &
                                        (df_other_11_00['inter_0/0_1/1'].map(len) >= 2)))]
-print(df_other_11_00_filter.to_string())
+# print(df_other_11_00_filter.to_string())
 
-all_bins_2 = df_other_11_00.all(axis=1)
-
-# df_other_11_00_filter['rest_inter_0/0_1/1'] = list(sorted(set(a) ^ set(b)) for a, b in
-#                                      zip(df_other_11_00_filter['0/0_start'],
-#                                          df_other_11_00_filter['1/1_end']))
-
+# create columns with the rest of samples for records where 1/1 or 0/0 contains only 2 samples
 df_other_11_00_filter['rest_inter_1/1'] = list(sorted(set(a) ^ set(b)) if len(c) == 2 else [] for a, b, c in
                                      zip(df_other_11_00_filter['1/1_start'],
                                          df_other_11_00_filter['1/1_end'], df_other_11_00_filter['inter_1/1']))
@@ -349,45 +276,23 @@ df_other_11_00_filter['rest_inter_0/0_1/1'] = list(sorted(set(a) ^ set(b)) if le
                                      zip(df_other_11_00_filter['0/0_start'],
                                          df_other_11_00_filter['1/1_end'], df_other_11_00_filter['inter_0/0_1/1']))
 
-# loc1['location'] = (loc1['loc_1']  + loc1['loc_2']).apply(set)
-
+# merge columns with rest of samples into one
 df_other_11_00_filter['rest'] = (df_other_11_00_filter['rest_inter_1/1'] + df_other_11_00_filter['rest_inter_0/0'] +
                                  df_other_11_00_filter['rest_inter_1/1_0/0'] +
                                  df_other_11_00_filter['rest_inter_0/0_1/1']).apply(set).apply(sorted)
 
+# merge columns for records containing only 2 samples for 1/1 or 0/0 with correct samples with 1/1 and 0/0 into one
 df_other_11_00_filter['1/1'] = (df_other_11_00_filter['inter_1/1'] + df_other_11_00_filter['inter_1/1_0/0']).apply(set).apply(sorted)
 df_other_11_00_filter['0/0'] = (df_other_11_00_filter['inter_0/0'] + df_other_11_00_filter['inter_0/0_1/1']).apply(set).apply(sorted)
 
-print(df_other_11_00_filter.to_string())
+# print(df_other_11_00_filter.to_string())
 
 df_other_11_00_filter_final = df_other_11_00_filter.drop(['1/1_start', '0/0_start', '1/1_end', '0/0_end', 'inter_1/1',
                                                           'inter_0/0', 'inter_1/1_0/0', 'inter_0/0_1/1',
                                                           'rest_inter_1/1', 'rest_inter_0/0', 'rest_inter_1/1_0/0',
                                                           'rest_inter_0/0_1/1'], axis=1).reset_index(drop=True).\
     reindex(columns=['CHROM', 'start', 'end', '1/1', '0/0', 'rest'])
-
-
-# df_other_11_00_filter['rest_inter_0/0_1/1'] = list([(set(a) ^ set(b)) for a, b in
-#                                      zip(df_other_11_00_filter['0/0_start'],
-#                                          df_other_11_00_filter['1/1_end'])])
 print(df_other_11_00_filter_final.to_string())
-
-# do dokończenia
-# df_3_filter = df_filter.loc[(len(df_bins['inter1']) >= 3 or len(df_bins['inter2']) >= 3) and (len(df_bins['inter3']) >= 3 or len(df_bins['inter4']) >= 3)]
-
-# df_filter = df_bins.loc[~(((df_bins['one_one'] == df_bins['one_one_next']) & (df_bins['zero_zero'] == df_bins['zero_zero_next'])
-#                         & (df_bins['one_one'] == df_bins['one_one_back']) & (df_bins['zero_zero'] == df_bins['zero_zero_back'])) |
-#                           ((df_bins['one_one'] == df_bins['zero_zero_next']) & (
-#                                       df_bins['zero_zero'] == df_bins['one_one_next'])
-#                            & (df_bins['one_one'] == df_bins['one_one_back']) & (
-#                                        df_bins['zero_zero'] == df_bins['zero_zero_back']))
-#                           )]
-
-
-#
-# rslt_df = dataframe.loc[(dataframe['Age'] == 21) &
-#               dataframe['Stream'].isin(options)]
-
 # df_2_filter.to_csv('P1_start_end_test_chr1_3.csv', sep='\t', index=False)
 
 print("--- %s seconds ---" % (time.time() - start_time))
