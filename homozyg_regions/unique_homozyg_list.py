@@ -38,11 +38,28 @@ print(df_unique.to_string(max_rows=50))
 #     for y in df_unique.itertuples():
 #         if x.one_one_3first == y.one_one_3first and x.zero_zero_3first == y.zero_zero_3first:
 #             df.at[x.Index, x.unique_no] = y.Index
-
-for index_x, x in df.iterrows():
-    for index_y, y in df_unique.iterrows():
-        if x['one_one_3first'] == y['one_one_3first'] and x['zero_zero_3first'] == y['zero_zero_3first']:
-            df.at[index_x, 'unique_no'] = index_y
+#
+# for index_x, x in df.iterrows():
+#     for index_y, y in df_unique.iterrows():
+#         if x['one_one_3first'] == y['one_one_3first'] and x['zero_zero_3first'] == y['zero_zero_3first']:
+#             df.at[index_x, 'unique_no'] = index_y
 
 print(df.to_string(max_rows=50))
+
+df_unique['one_zero'] = df_unique['one_one_3first'] + df_unique['zero_zero_3first']
+df_unique['zero_one'] = df_unique['zero_zero_3first'] + df_unique['one_one_3first']
+print(df_unique.to_string(max_rows=50))
+
+group = df_unique[['one_zero', 'zero_one']].apply(frozenset, axis=1)
+df_unique_final = df_unique.groupby(group, as_index=False).first()
+genes_count_in_df_unique_final = df_unique.groupby(group, as_index=False, sort=False).agg({'genes_count': 'sum'})
+# df_unique_final2 = df_unique.groupby(group, as_index=False).size().reset_index().rename(columns={0: 'count'})
+df_unique_final = df_unique_final.drop(columns=['genes_count', 'one_zero', 'zero_one'])
+df_unique_final['genes_count'] = genes_count_in_df_unique_final['genes_count']
+genes_sum = genes_count_in_df_unique_final['genes_count'].sum()
+
+print(df_unique_final.to_string(max_rows=50))
+# print(df_unique_final2.to_string(max_rows=50))
+print(genes_count_in_df_unique_final)
+print(genes_sum)
 print("--- %s seconds ---" % (time.time() - start_time))
