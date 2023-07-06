@@ -74,8 +74,9 @@ print(df_unique.to_string(max_rows=50))
 group = df_unique[['one_zero', 'zero_one']].apply(frozenset, axis=1)
 
 df_unique_final_1 = df_unique.groupby(group).agg({'df_unique_index': (lambda x: list(x)), 'one_one_3first': 'first',
-                                                  'zero_zero_3first': 'first','genes_count': 'sum'}).reset_index()
+                                                  'zero_zero_3first': 'first', 'genes_count': 'sum'}).reset_index()
 
+# create the final list of samples sets to differential expression analysis
 df_unique_final_1 = df_unique_final_1.drop(columns=['index']).rename(columns={'one_one_3first': 'one_one',
                                                                               'zero_zero_3first': 'zero_zero'}).\
     reindex(columns=['one_one', 'zero_zero', 'df_unique_index', 'genes_count'])
@@ -83,6 +84,9 @@ df_unique_final_1 = df_unique_final_1.drop(columns=['index']).rename(columns={'o
 genes_sum = df_unique_final_1['genes_count'].sum()
 print(df_unique_final_1.to_string(max_rows=50))
 print(genes_sum)
+
+# save the final list of samples sets to differential expression analysis to csv file
+# df_unique_final_1.to_csv('P1_unique_sets_for_DE.csv', sep='\t', index=True)
 
 # different solution tested
 # df_unique_final3 = df_unique.groupby(group, as_index=False).first()
@@ -94,10 +98,40 @@ print(genes_sum)
 # df_unique_final2 = df_unique.groupby(group, as_index=False).size().reset_index().rename(columns={0: 'count'})
 # df_unique_final = df_unique_final.drop(columns=['genes_count', 'one_zero', 'zero_one'])
 # df_unique_final['genes_count'] = genes_count_in_df_unique_final['genes_count']
-# print(df_unique_final)
-# print(df_unique_final.to_string(max_rows=50))
-# print(df_unique_final3.to_string(max_rows=50))
-# print(genes_count_in_df_unique_final)
-# print(df_unique_final2.to_string(max_rows=50))
+
+# transform the list of samples sets to DE analysis to be able to create input files for every set
+df_for_de_one = df_unique_final_1.explode('one_one')
+df_for_de_one = df_for_de_one.reset_index(drop=False).rename(columns={'index': "df_unique_final_1_idx"})
+df_for_de_one['condition'] = 'one_one'
+df_for_de_one = df_for_de_one.reindex(columns=["df_unique_final_1_idx", 'one_one', 'condition', 'zero_zero',
+                                               'df_unique_index', 'genes_count']).rename(columns={'one_one': 'sample'})
+
+df_for_de_zero = df_unique_final_1.explode('zero_zero')
+df_for_de_zero = df_for_de_zero.reset_index(drop=False).rename(columns={'index': "df_unique_final_1_idx"})
+df_for_de_zero['condition'] = 'zero_zero'
+df_for_de_zero = df_for_de_zero.reindex(columns=["df_unique_final_1_idx", 'zero_zero', 'condition', 'one_one',
+                                                 'df_unique_index', 'genes_count']).\
+    rename(columns={'zero_zero': 'sample'})
+
+# print(df_for_de_one.to_string(max_rows=50))
+# print(df_for_de_zero.to_string(max_rows=50))
+
+df_for_de = pd.concat([df_for_de_one, df_for_de_zero]).sort_values(by=['df_unique_final_1_idx', 'condition']).\
+    drop(columns=['zero_zero', 'df_unique_index', 'genes_count', 'one_one']).reset_index(drop=True)
+
+print(df_for_de.to_string(max_rows=50))
+
+# create input files to DE for all sample sets --> filename contains the set number (from 0)
+for idx, subdf in df_for_de.groupby('df_unique_final_1_idx'):
+    subdf = subdf.drop(columns=['df_unique_final_1_idx']).rename(columns={'sample': '#sample'})
+    subdf.to_csv(f'P1_to_DE_{idx}.csv', sep='\t', index=False)
+
+# test the solution for two sets
+# df_to_csv = df_for_de.head(12)
+# print(df_to_csv.to_string())
+#
+# for idx, subdf in df_to_csv.groupby('df_unique_final_1_idx'):
+#     subdf = subdf.drop(columns=['df_unique_final_1_idx']).rename(columns={'sample': '#sample'})
+#     subdf.to_csv(f'P1_to_DE_{idx}.csv', sep='\t', index=False)
 
 print("--- %s seconds ---" % (time.time() - start_time))
