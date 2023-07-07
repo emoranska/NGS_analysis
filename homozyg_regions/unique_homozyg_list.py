@@ -1,6 +1,7 @@
 import pandas as pd
 import time
 import ast
+from pathlib import Path
 
 start_time = time.time()
 
@@ -99,7 +100,8 @@ print(genes_sum)
 # df_unique_final = df_unique_final.drop(columns=['genes_count', 'one_zero', 'zero_one'])
 # df_unique_final['genes_count'] = genes_count_in_df_unique_final['genes_count']
 
-# transform the list of samples sets to DE analysis to be able to create input files for every set
+'''
+# transform the list of samples sets to DE analysis with 1 or more genes to be able to create input files for every set
 df_for_de_one = df_unique_final_1.explode('one_one')
 df_for_de_one = df_for_de_one.reset_index(drop=False).rename(columns={'index': "df_unique_final_1_idx"})
 df_for_de_one['condition'] = 'one_one'
@@ -119,19 +121,60 @@ df_for_de_zero = df_for_de_zero.reindex(columns=["df_unique_final_1_idx", 'zero_
 df_for_de = pd.concat([df_for_de_one, df_for_de_zero]).sort_values(by=['df_unique_final_1_idx', 'condition']).\
     drop(columns=['zero_zero', 'df_unique_index', 'genes_count', 'one_one']).reset_index(drop=True)
 
-print(df_for_de.to_string(max_rows=50))
-
 # create input files to DE for all sample sets --> filename contains the set number (from 0)
-for idx, subdf in df_for_de.groupby('df_unique_final_1_idx'):
-    subdf = subdf.drop(columns=['df_unique_final_1_idx']).rename(columns={'sample': '#sample'})
-    subdf.to_csv(f'P1_to_DE_{idx}.csv', sep='\t', index=False)
-
-# test the solution for two sets
+# output_folder = Path("~/Pulpit/burak/homozyg_regions/input_to_DE/P1")
+# for idx, subdf in df_for_de.groupby('df_unique_final_1_idx'):
+#     subdf = subdf.drop(columns=['df_unique_final_1_idx']).rename(columns={'sample': '#sample'})
+#     file_name = f'P1_to_DE_{idx}.csv'
+#     file_path = output_folder/file_name
+#     subdf.to_csv(file_path, sep='\t', index=False)
+# 
+# # test the solution for two sets
 # df_to_csv = df_for_de.head(12)
 # print(df_to_csv.to_string())
-#
+# 
+# output_folder = Path("~/Pulpit/burak/homozyg_regions/input_to_DE/P1")
+# 
 # for idx, subdf in df_to_csv.groupby('df_unique_final_1_idx'):
 #     subdf = subdf.drop(columns=['df_unique_final_1_idx']).rename(columns={'sample': '#sample'})
-#     subdf.to_csv(f'P1_to_DE_{idx}.csv', sep='\t', index=False)
+#     file_name = f'P1_to_DE_{idx}.csv'
+#     file_path = output_folder/file_name
+#     subdf.to_csv(file_path, sep='\t', index=False)
+'''
 
+'''
+df_unique_final_20more_genes = df_unique_final_1[df_unique_final_1['genes_count'] >= 20].reset_index(drop=True)
+print(df_unique_final_20more_genes.to_string(max_rows=50))
+
+# transform the list of samples sets to DE analysis with 20 or more genes to be able to create input files for every set
+df_for_de_one = df_unique_final_20more_genes.explode('one_one')
+df_for_de_one = df_for_de_one.reset_index(drop=False).rename(columns={'index': "df_unique_final_20more_idx"})
+df_for_de_one['condition'] = 'one_one'
+df_for_de_one = df_for_de_one.reindex(columns=["df_unique_final_20more_idx", 'one_one', 'condition', 'zero_zero',
+                                               'df_unique_index', 'genes_count']).rename(columns={'one_one': 'sample'})
+
+df_for_de_zero = df_unique_final_20more_genes.explode('zero_zero')
+df_for_de_zero = df_for_de_zero.reset_index(drop=False).rename(columns={'index': "df_unique_final_20more_idx"})
+df_for_de_zero['condition'] = 'zero_zero'
+df_for_de_zero = df_for_de_zero.reindex(columns=["df_unique_final_20more_idx", 'zero_zero', 'condition', 'one_one',
+                                                 'df_unique_index', 'genes_count']).\
+    rename(columns={'zero_zero': 'sample'})
+
+# print(df_for_de_one.to_string(max_rows=50))
+# print(df_for_de_zero.to_string(max_rows=50))
+
+df_for_de = pd.concat([df_for_de_one, df_for_de_zero]).sort_values(by=['df_unique_final_20more_idx', 'condition']).\
+    drop(columns=['zero_zero', 'df_unique_index', 'genes_count', 'one_one']).reset_index(drop=True)
+
+print(df_for_de.to_string(max_rows=50))
+
+# create input files to DE for all sample sets with 20 or more genes --> filename contains the set number (from 0)
+output_folder = Path("~/Pulpit/burak/homozyg_regions/input_to_DE/P4")
+
+for idx, subdf in df_for_de.groupby('df_unique_final_20more_idx'):
+    subdf = subdf.drop(columns=['df_unique_final_20more_idx']).rename(columns={'sample': '#sample'})
+    file_name = f'P4_to_DE_{idx}.csv'
+    file_path = output_folder / file_name
+    subdf.to_csv(file_path, sep='\t', index=False)
+'''
 print("--- %s seconds ---" % (time.time() - start_time))
