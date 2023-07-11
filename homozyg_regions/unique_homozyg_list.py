@@ -5,7 +5,7 @@ from pathlib import Path
 
 start_time = time.time()
 
-df = pd.read_csv('bins/P1_EL10_chr1_9_homozyg_bins_with_genes.csv', sep='\t')
+df = pd.read_csv('bins/P4_EL10_chr1_9_homozyg_bins_with_genes.csv', sep='\t')
 
 # create columns with 3 first samples for 1/1 and 0/0
 df['1/1_3first'] = df['1/1'].apply(lambda x: ast.literal_eval(x)[:3])
@@ -142,10 +142,11 @@ df_for_de = pd.concat([df_for_de_one, df_for_de_zero]).sort_values(by=['df_uniqu
 #     subdf.to_csv(file_path, sep='\t', index=False)
 '''
 
-'''
 df_unique_final_20more_genes = df_unique_final_1[df_unique_final_1['genes_count'] >= 20].reset_index(drop=True)
 print(df_unique_final_20more_genes.to_string(max_rows=50))
+df_unique_final_20more_genes.to_csv('P4_list_to_DE_20more_genes.csv', sep='\t', index=True)
 
+'''
 # transform the list of samples sets to DE analysis with 20 or more genes to be able to create input files for every set
 df_for_de_one = df_unique_final_20more_genes.explode('one_one')
 df_for_de_one = df_for_de_one.reset_index(drop=False).rename(columns={'index': "df_unique_final_20more_idx"})
