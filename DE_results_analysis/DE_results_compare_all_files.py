@@ -5,22 +5,29 @@ from pathlib import Path
 
 start_time = time.time()
 
-genes_in_bins = pd.read_csv('../homozyg_regions/P1_list_genes_in_homozyg_bins.csv', sep='\t')
+# genes_in_bins = pd.read_csv('../homozyg_regions/P1_list_genes_in_homozyg_bins.csv', sep='\t')
 # genes_in_bins = pd.read_csv('../homozyg_regions/P4_list_genes_in_homozyg_bins.csv', sep='\t')
-genes_legend = pd.read_csv('genes.csv', sep=',').rename(columns={'Gene': 'GeneID'})
+genes_in_bins = pd.read_csv('../files/P1_list_genes_in_rest_bins_to_add.csv', sep='\t')
 
-list_to_de = pd.read_csv('../homozyg_regions/P1_list_to_DE_20more_genes.csv', sep='\t')
+# genes_legend = pd.read_csv('genes.csv', sep=',').rename(columns={'Gene': 'GeneID'})
+genes_legend = pd.read_csv('../../../Pobrane/genes.csv', sep=',').rename(columns={'Gene': 'GeneID'})
+
+# list_to_de = pd.read_csv('../homozyg_regions/P1_list_to_DE_20more_genes.csv', sep='\t')
 # list_to_de = pd.read_csv('../homozyg_regions/P4_list_to_DE_20more_genes.csv', sep='\t')
+list_to_de = pd.read_csv('../../../Pobrane/P1_list_to_DE_20more_genes.csv', sep='\t')
+
 list_to_de['df_unique_index'] = list_to_de['df_unique_index'].apply(ast.literal_eval)
 
-input_folder = Path("~/Pulpit/Emi_P1")
+# input_folder = Path("~/Pulpit/Emi_P1")
 # input_folder = Path("~/Pulpit/Emi_P4")
+input_folder = Path("~/Pobrane/Emi_P1")
 
 
 def de_results_with_genes_in_bins():
     final_df = pd.DataFrame()
 
-    for idx in range(0, 92):
+    # set the range according to numer of output files with DE results
+    for idx in range(0, 97):
         # read the files with DE results according to path and current sample set number <idx> in loop
         file_name = f'one_one_zero_zero_{idx}_deseq2.xls'
         file_path = input_folder / file_name
@@ -39,7 +46,7 @@ def de_results_with_genes_in_bins():
 
         # comparing set number from file name (<de_results>) with 'P1_list_to_DE_20more_genes.csv' to get <unique_no>
         unique_no = list_to_de.loc[idx, 'df_unique_index']
-        print(unique_no, type(unique_no))
+        # print(unique_no, type(unique_no))
 
         # filter list of genes in bins for appropriate sample set
         genes_in_bins_for_set = genes_in_bins[genes_in_bins['unique_no'].isin(unique_no)]
@@ -57,16 +64,20 @@ def de_results_with_genes_in_bins():
                                                              'padj', 'Biotype', 'Description'])
         # print(de_genes_in_bins.to_string())
 
-        final_df = final_df.append(de_genes_in_bins).reset_index(drop=True)
+        # pd.append deprecated in pandas > 2.0
+        # final_df = final_df.append(de_genes_in_bins).reset_index(drop=True)
+        # final_df = final_df.concat(de_genes_in_bins).reset_index(drop=True)
+        final_df = pd.concat([final_df, de_genes_in_bins], ignore_index=True)
 
-    print(final_df.to_string())
+    print(final_df.to_string(max_rows=50))
     # final_df.to_csv('P1_DE_results_comparing_with_genes_in_bins.csv', sep='\t', index=False)
     # final_df.to_csv('P4_DE_results_comparing_with_genes_in_bins.csv', sep='\t', index=False)
-
+    final_df.to_csv('P1_DE_results_comparing_with_genes_in_rest_bins.csv', sep='\t', index=False)
 
 def xloc_checking():
     final_df = pd.DataFrame()
 
+    # set the range according to numer of output files with DE results
     for idx in range(0, 97):
         # read the files with DE results according to path and current sample set number <idx> in loop
         file_name = f'one_one_zero_zero_{idx}_deseq2.xls'
@@ -85,7 +96,7 @@ def xloc_checking():
 
         # comparing set number from file name (<de_results>) with 'P1_list_to_DE_20more_genes.csv' to get <unique_no>
         unique_no = list_to_de.loc[idx, 'df_unique_index']
-        print(unique_no, type(unique_no))
+        # print(unique_no, type(unique_no))
 
         # filter list of bins with genes from EL10 annotation for appropriate sample set
         genes_in_bins_for_set = genes_in_bins[genes_in_bins['unique_no'].isin(unique_no)]
@@ -103,8 +114,11 @@ def xloc_checking():
         de_xloc_genes_in_bins['set_no'] = idx
         # print(de_xloc_genes_in_bins.to_string(max_rows=50))
 
-        final_df = final_df.append(de_xloc_genes_in_bins).reset_index(drop=True)
-        final_df.to_csv('P1_XLOC_comparing_with_bins_with_genes.csv', sep='\t', index=False)
+        # pd.append deprecated in pandas > 2.0
+        # final_df = final_df.append(de_xloc_genes_in_bins).reset_index(drop=True)
+        final_df = pd.concat([final_df, de_xloc_genes_in_bins], ignore_index=True)
+
+        final_df.to_csv('P1_XLOC_comparing_with_rest_bins_with_genes.csv', sep='\t', index=False)
         # final_df.to_csv('P4_XLOC_comparing_with_bins_with_genes.csv', sep='\t', index=False)
 
     print(final_df.to_string())
@@ -112,4 +126,5 @@ def xloc_checking():
 
 # de_results_with_genes_in_bins()
 xloc_checking()
+
 print("--- %s seconds ---" % (time.time() - start_time))
