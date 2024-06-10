@@ -27,18 +27,6 @@ de_and_bins = pd.read_csv('../files/P1_DE_results_comparing_with_genes_in_bins.c
 print(te_list.to_string(max_rows=30))
 print(de_and_bins.to_string(max_rows=30))
 
-'''
-te_in_bins = []
-
-for te in te_list.itertuples():
-    for x in de_and_bins.itertuples():
-        if te.chr == x.chr and te.start in range(int(x.start_bin), int(x.end_bin + 1)):
-            te_in_bins.append(x)
-            # print(te)
-
-# te_in_bins_df = pd.concat(te_in_bins)
-print(te_in_bins)
-'''
 te_in_bins = (de_and_bins.merge(te_list, how='cross').query('(start >= start_bin) & (end <= end_bin) & '
                                                             '(chr == chr_te)').
               drop_duplicates(['start_bin', 'end_bin']).reset_index(drop=True))
