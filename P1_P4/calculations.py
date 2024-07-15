@@ -3,15 +3,15 @@ import time
 
 start_time = time.time()
 
-te_matrix = pd.read_csv('../files/P1_matrix_all.csv', sep='\t')
-# te_matrix = pd.read_csv('../files/P4_matrix_all.csv', sep='\t')
+# te_matrix = pd.read_csv('../files/P1_matrix_all.csv', sep='\t')
+te_matrix = pd.read_csv('../files/P4_matrix_all.csv', sep='\t')
 print(te_matrix.to_string(max_rows=30))
 
 te_matrix['start'] = te_matrix['start'].astype(int)
 te_matrix['end'] = te_matrix['end'].astype(int)
 
-cols = te_matrix.filter(like='P1-').columns
-# cols = te_matrix.filter(like='P4-').columns
+# cols = te_matrix.filter(like='P1-').columns
+cols = te_matrix.filter(like='P4-').columns
 sep = ','
 
 te_matrix[cols] = te_matrix[cols].astype(float)
@@ -33,7 +33,7 @@ print(te_family_no.to_string(), type(te_family_no), te_family_no_sorted.to_strin
 # te_matrix['P1-6'] = te_matrix.apply(lambda row: row['family'] if row['P1-6'] > 0 else row['P1-6'], axis=1)
 # print(te_matrix.to_string(max_rows=30))
 
-#
+# put family name instead of value if > 0
 te_matrix[cols] = te_matrix[cols].mask(te_matrix[cols].apply(pd.to_numeric, errors='coerce').gt(0),
                          te_matrix['family'], axis=0)
 
@@ -43,24 +43,34 @@ te_matrix[cols] = te_matrix[cols].mask(te_matrix[cols].apply(pd.to_numeric, erro
 
 print(te_matrix.to_string(max_rows=30))
 
+# calculate MITEs in every sample for all families
 te_in_samples = pd.DataFrame()
 for col in cols:
     te_in_sample = te_matrix.groupby([col]).size()
     te_in_samples = te_in_samples.append(te_in_sample, ignore_index=True)
 
-te_in_samples = (te_in_samples.transpose().rename(columns={0: 'P1-6', 1: 'P1-12', 2: 'P1-22', 3: 'P1-25',
-                                                          4: 'P1-26', 5: 'P1-28', 6: 'P1-88', 7: 'P1-89', 8: 'P1-90',
-                                                          9: 'P1-92', 10: 'P1-93', 11: 'P1-95'}, index={0.0: 'COUNT'}).
+# for P1
+# te_in_samples = (te_in_samples.transpose().rename(columns={0: 'P1-6', 1: 'P1-12', 2: 'P1-22', 3: 'P1-25',
+#                                                           4: 'P1-26', 5: 'P1-28', 6: 'P1-88', 7: 'P1-89', 8: 'P1-90',
+#                                                           9: 'P1-92', 10: 'P1-93', 11: 'P1-95'}, index={0.0: 'COUNT'}).
+#                  fillna(0).astype(int))
+
+# for P4
+te_in_samples = (te_in_samples.transpose().rename(columns={0: 'P4-1', 1: 'P4-7', 2: 'P4-15', 3: 'P4-29',
+                                                          4: 'P4-32', 5: 'P4-35', 6: 'P4-46', 7: 'P4-47', 8: 'P4-56',
+                                                          9: 'P4-60', 10: 'P4-62', 11: 'P4-64'}, index={0.0: 'COUNT'}).
                  fillna(0).astype(int))
 
 print(te_in_samples.to_string())
 
+# sorting results
 te_in_samples_sort_index = te_in_samples.index.to_series().str.split('|',expand=True).fillna(0)
 print(te_in_samples_sort_index)
 te_in_samples_sort_index[1] = te_in_samples_sort_index[1].astype(int)
 te_in_samples_sort_index = te_in_samples_sort_index.sort_values([0, 1], ascending=[True, True])
 te_in_samples = te_in_samples.reindex(te_in_samples_sort_index.index).rename(index={'COUNT': 'SUM'})
 
+# add column with sum of MITES
 te_in_samples = (pd.concat([te_family_no, te_in_samples], axis=1).fillna(0).astype(int).
                  rename(columns={0: 'no_of_TE_ins'}))
 
@@ -69,6 +79,8 @@ te_in_samples.columns.name = 'family'
 
 print(te_in_samples.to_string())
 
-te_in_samples.to_csv('P1_MITEs_count.csv',  sep='\t')
+# saving as .csv
+# te_in_samples.to_csv('P1_MITEs_count.csv',  sep='\t')
+te_in_samples.to_csv('P4_MITEs_count.csv',  sep='\t')
 
 print("--- %s seconds ---" % (time.time() - start_time))
