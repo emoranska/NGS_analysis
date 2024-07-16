@@ -5,90 +5,92 @@ import time
 start_time = time.time()
 
 # for P1
-# te_matrix = pd.read_csv('../files/P1_matrix_all.csv', sep='\t')
-# te_matrix = pd.read_csv('../files/P1_ref_matrix_sort_2000_all.csv', sep='\t')
-# te_matrix = pd.read_csv('../files/P1_nonref_matrix_all.csv', sep='\t')
+p1_mites_matrix_all = pd.read_csv('../files/P1_matrix_all.csv', sep='\t')
+p1_mites_matrix_ref = pd.read_csv('../files/P1_ref_matrix_sort_2000_all.csv', sep='\t')
+p1_mites_matrix_nonref = pd.read_csv('../files/P1_nonref_matrix_all.csv', sep='\t')
 
 # for P4
-# te_matrix = pd.read_csv('../files/P4_matrix_all.csv', sep='\t')
-# te_matrix = pd.read_csv('../files/P4_ref_matrix_sort_2000_all.csv', sep='\t')
-te_matrix = pd.read_csv('../files/P4_nonref_matrix_all.csv', sep='\t')
-print(te_matrix.to_string(max_rows=30))
+p4_mites_matrix_all = pd.read_csv('../files/P4_matrix_all.csv', sep='\t')
+p4_mites_matrix_ref = pd.read_csv('../files/P4_ref_matrix_sort_2000_all.csv', sep='\t')
+p4_mites_matrix_nonref = pd.read_csv('../files/P4_nonref_matrix_all.csv', sep='\t')
 
-te_matrix['start'] = te_matrix['start'].astype(int)
-te_matrix['end'] = te_matrix['end'].astype(int)
 
-# cols = te_matrix.filter(like='P1-').columns
-cols = te_matrix.filter(like='P4-').columns
-sep = ','
+def columns_filter(mites_matrix, pop_symbol):
+    pop_cols = mites_matrix.filter(like=pop_symbol).columns
+    mites_matrix[pop_cols] = mites_matrix[pop_cols].astype(float)
+    return pop_cols
 
-te_matrix[cols] = te_matrix[cols].astype(float)
+
+cols = columns_filter(p4_mites_matrix_nonref, 'P4-')
 
 # filter records with MITE insertions (homo- and heterozygous, interpreted as frequency > 0.3
-te_matrix_ins = te_matrix[te_matrix[cols].ge(0.3).any(axis=1)].reset_index(drop=True)
+te_matrix_ins = p4_mites_matrix_nonref[p4_mites_matrix_nonref[cols].ge(0.3).any(axis=1)].reset_index(drop=True)
 print(te_matrix_ins.to_string(max_rows=30))
 
-# calculate sum of MITEs for every family
-te_family_no = te_matrix.groupby(['family']).size()
 
-te_family_no_sorted = te_family_no.sort_values(ascending=False)
-print(te_family_no.to_string(), te_family_no_sorted.to_string())
+def mites_counts(te_matrix):
+    # calculate sum of MITEs for every family
+    te_family_no = te_matrix.groupby(['family']).size()
+    te_family_no_sorted = te_family_no.sort_values(ascending=False)
+    print(te_family_no.to_string(), te_family_no_sorted.to_string())
 
-# put family name instead of value if > 0
-te_matrix[cols] = te_matrix[cols].mask(te_matrix[cols].apply(pd.to_numeric, errors='coerce').gt(0),
-                                       te_matrix['family'], axis=0)
+    # put family name instead of value if > 0
+    te_matrix[cols] = te_matrix[cols].mask(te_matrix[cols].apply(pd.to_numeric, errors='coerce').gt(0),
+                                           te_matrix['family'], axis=0)
 
-# slower than the previous method
-# for col in cols:
-#     te_matrix[col] = te_matrix.apply(lambda row: row['family'] if row[col] > 0 else row[col], axis=1)
+    # slower than the previous method
+    # for col in cols:
+    #     te_matrix[col] = te_matrix.apply(lambda row: row['family'] if row[col] > 0 else row[col], axis=1)
 
-print(te_matrix.to_string(max_rows=30))
+    print(te_matrix.to_string(max_rows=30))
 
-# calculate MITEs in every sample for all families
-te_in_samples = pd.DataFrame()
+    # calculate MITEs in every sample for all families
+    te_in_samples = pd.DataFrame()
 
-for col in cols:
-    te_in_sample = te_matrix.groupby([col]).size()
-    te_in_samples = pd.concat([te_in_samples, te_in_sample], axis=1)
+    for col in cols:
+        te_in_sample = te_matrix.groupby([col]).size()
+        te_in_samples = pd.concat([te_in_samples, te_in_sample], axis=1)
 
-# for P1
-# te_in_samples.columns = ['P1-6', 'P1-12', 'P1-22', 'P1-25', 'P1-26', 'P1-28', 'P1-88', 'P1-89', 'P1-90', 'P1-92',
-#                          'P1-93', 'P1-95']
+    # for P1
+    # te_in_samples.columns = ['P1-6', 'P1-12', 'P1-22', 'P1-25', 'P1-26', 'P1-28', 'P1-88', 'P1-89', 'P1-90', 'P1-92',
+    #                          'P1-93', 'P1-95']
 
-# for P4
-te_in_samples.columns = ['P4-1', 'P4-7', 'P4-15', 'P4-29', 'P4-32', 'P4-35', 'P4-46', 'P4-47', 'P4-56', 'P4-60',
-                         'P4-62', 'P4-64']
+    # for P4
+    te_in_samples.columns = ['P4-1', 'P4-7', 'P4-15', 'P4-29', 'P4-32', 'P4-35', 'P4-46', 'P4-47', 'P4-56', 'P4-60',
+                             'P4-62', 'P4-64']
 
-te_in_samples = (te_in_samples.rename(index={0.0: 'COUNT'}).fillna(0).astype(int))
+    te_in_samples = (te_in_samples.rename(index={0.0: 'COUNT'}).fillna(0).astype(int))
 
-print(te_in_samples.to_string())
+    print(te_in_samples.to_string())
 
-# sorting results
-te_in_samples_sort_index = te_in_samples.index.to_series().str.split('|', expand=True).fillna(0)
-print(te_in_samples_sort_index)
-te_in_samples_sort_index[1] = te_in_samples_sort_index[1].astype(int)
+    # sorting results
+    te_in_samples_sort_index = te_in_samples.index.to_series().str.split('|', expand=True).fillna(0)
+    print(te_in_samples_sort_index)
+    te_in_samples_sort_index[1] = te_in_samples_sort_index[1].astype(int)
 
-te_in_samples_sort_index = te_in_samples_sort_index.sort_values(
-    by=[0, 1], ascending=[True, True], key=lambda x: x if np.issubdtype(x.dtype, np.number) else x.str.lower())
-print(te_in_samples_sort_index)
+    te_in_samples_sort_index = te_in_samples_sort_index.sort_values(
+        by=[0, 1], ascending=[True, True], key=lambda x: x if np.issubdtype(x.dtype, np.number) else x.str.lower())
+    print(te_in_samples_sort_index)
 
-te_in_samples = te_in_samples.reindex(te_in_samples_sort_index.index)
-print(te_in_samples)
+    te_in_samples = te_in_samples.reindex(te_in_samples_sort_index.index)
+    print(te_in_samples)
 
-te_family_no = te_family_no.reindex(te_in_samples_sort_index.index)
-print(te_family_no)
+    te_family_no = te_family_no.reindex(te_in_samples_sort_index.index)
+    print(te_family_no)
 
-# add column with sum of MITES
-te_in_samples = (pd.concat([te_family_no, te_in_samples], axis=1).fillna(0).astype(int).
-                 rename(columns={0: 'no_of_TE_ins'}, index={'COUNT': 'SUM'}))
+    # add column with sum of MITES
+    te_in_samples = (pd.concat([te_family_no, te_in_samples], axis=1).fillna(0).astype(int).
+                     rename(columns={0: 'no_of_TE_ins'}, index={'COUNT': 'SUM'}))
 
-te_in_samples.loc['SUM', 'no_of_TE_ins'] = te_in_samples['no_of_TE_ins'].sum()
-te_in_samples.columns.name = 'family'
+    te_in_samples.loc['SUM', 'no_of_TE_ins'] = te_in_samples['no_of_TE_ins'].sum()
+    te_in_samples.columns.name = 'family'
 
-print(te_in_samples.to_string())
+    print(te_in_samples.to_string())
 
-# saving as .csv
-# te_in_samples.to_csv('../files/P1_MITEs_ref_count.csv',  sep='\t')
-te_in_samples.to_csv('../files/P4_MITEs_nonref_count.csv',  sep='\t')
+    # saving as .csv
+    te_in_samples.to_csv('../files/P4_MITEs_nonref_count.csv', sep='\t')
+
+
+mites_counts(p4_mites_matrix_nonref)
 
 print("--- %s seconds ---" % (time.time() - start_time))
