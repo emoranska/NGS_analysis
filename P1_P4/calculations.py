@@ -21,7 +21,8 @@ def columns_filter(mites_matrix, pop_symbol):
     return pop_cols
 
 
-cols = columns_filter(p1_mites_matrix_all, 'P1-')
+# cols = columns_filter(p1_mites_matrix_all, 'P1-')
+cols = columns_filter(p4_mites_matrix_all, 'P4-')
 
 
 def mites_counts_all(te_matrix):
@@ -110,8 +111,12 @@ def mites_counts_ins(te_matrix):
         te_in_samples = pd.concat([te_in_samples, te_in_sample], axis=1)
 
     # for P1
-    te_in_samples.columns = ['P1-6', 'P1-12', 'P1-22', 'P1-25', 'P1-26', 'P1-28', 'P1-88', 'P1-89', 'P1-90', 'P1-92',
-                             'P1-93', 'P1-95']
+    # te_in_samples.columns = ['P1-6', 'P1-12', 'P1-22', 'P1-25', 'P1-26', 'P1-28', 'P1-88', 'P1-89', 'P1-90', 'P1-92',
+    #                          'P1-93', 'P1-95']
+
+    # for P4
+    te_in_samples.columns = ['P4-1', 'P4-7', 'P4-15', 'P4-29', 'P4-32', 'P4-35', 'P4-46', 'P4-47', 'P4-56', 'P4-60',
+                             'P4-62', 'P4-64']
 
     te_in_samples = te_in_samples.fillna(0)
     te_in_samples = te_in_samples.filter(regex='^\D', axis=0).astype(int)
@@ -128,12 +133,70 @@ def mites_counts_ins(te_matrix):
     print(te_in_samples_sort_index)
 
     te_in_samples = te_in_samples.reindex(te_in_samples_sort_index.index)
+    te_in_samples.columns.name = 'family'
     print(te_in_samples.to_string())
 
     # saving as .csv
-    te_in_samples.to_csv('../files/P1_MITEs_heterozyg_ins_count.csv', sep='\t')
+    te_in_samples.to_csv('../files/P4_MITEs_heterozyg_ins_count.csv', sep='\t')
 
 
-mites_counts_ins(p1_mites_matrix_all)
+# mites_counts_ins(p4_mites_matrix_all)
+
+
+p1_homo_ins = pd.read_csv('../files/P1_MITEs_homozyg_ins_count.csv', sep='\t')
+p1_hetero_ins = pd.read_csv('../files/P1_MITEs_heterozyg_ins_count.csv', sep='\t')
+
+p4_homo_ins = pd.read_csv('../files/P4_MITEs_homozyg_ins_count.csv', sep='\t')
+p4_hetero_ins = pd.read_csv('../files/P4_MITEs_heterozyg_ins_count.csv', sep='\t')
+
+# df_sum = pd.concat([p1_homo_ins, p1_hetero_ins]).groupby(['family']).sum().reset_index().set_index('family')
+df_sum = pd.concat([p4_homo_ins, p4_hetero_ins]).groupby(['family']).sum().reset_index().set_index('family')
+print(df_sum)
+
+# sorting results
+df_sum_sort_index = df_sum.index.to_series().str.split('|', expand=True).fillna(0)
+print(df_sum_sort_index)
+df_sum_sort_index[1] = df_sum_sort_index[1].astype(int)
+
+df_sum_sort_index = df_sum_sort_index.sort_values(
+    by=[0, 1], ascending=[True, True], key=lambda x: x if np.issubdtype(x.dtype, np.number) else x.str.lower())
+print(df_sum_sort_index)
+
+df_sum = df_sum.reindex(df_sum_sort_index.index)
+print(df_sum)
+
+
+def ins_table_final(homo_ins, hetero_ins, sum_ins):
+    homo_ins = homo_ins.set_index('family')
+    hetero_ins = hetero_ins.set_index('family')
+    final_table = (pd.concat([sum_ins, homo_ins, hetero_ins], keys=['sum', 'homo', 'hetero']).swaplevel().
+                   sort_index(level=0, sort_remaining=False))
+    print(final_table.to_string())
+
+    # sorting results
+    final_table_reset = final_table.rename_axis(index=["family", "ins"]).reset_index()
+    final_table_sort_index = final_table_reset['family'].str.split('|', expand=True).fillna(0)
+    print(final_table_sort_index)
+    final_table_sort_index[1] = final_table_sort_index[1].astype(int)
+
+    final_table_sort_index = final_table_sort_index.sort_values(
+        by=[0, 1], ascending=[True, True], key=lambda x: x if np.issubdtype(x.dtype, np.number) else x.str.lower())
+    print(final_table_sort_index)
+
+    # final_table_reset = final_table_reset.reindex(final_table_sort_index.index)
+    final_table_reset = ((pd.concat([final_table_reset, final_table_sort_index], axis=1).
+                         sort_values(by=[0, 1], ascending=[True, True],
+                                     key=lambda x: x if np.issubdtype(x.dtype, np.number) else x.str.lower())).
+                         drop(columns=[0, 1])).reset_index(drop=True)
+
+    final_table_reset = (final_table_reset.set_index([final_table_reset['family'], final_table_reset['ins']]).
+                         drop(columns=['family', 'ins']))
+    print(final_table_reset)
+
+    final_table_reset.to_csv('../files/P4_MITEs_ins_all_count.csv', sep='\t')
+
+
+# ins_table_final(p1_homo_ins, p1_hetero_ins, df_sum)
+ins_table_final(p4_homo_ins, p4_hetero_ins, df_sum)
 
 print("--- %s seconds ---" % (time.time() - start_time))
