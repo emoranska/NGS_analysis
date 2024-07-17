@@ -4,18 +4,19 @@ import time
 
 start_time = time.time()
 
-# for P1
+# read .csv files with MITEs insertions as dataframes
+# for P1 population
 p1_mites_matrix_all = pd.read_csv('../files/P1_matrix_all.csv', sep='\t')
 p1_mites_matrix_ref = pd.read_csv('../files/P1_ref_matrix_sort_2000_all.csv', sep='\t')
 p1_mites_matrix_nonref = pd.read_csv('../files/P1_nonref_matrix_all.csv', sep='\t')
 
-# for P4
+# for P4 population
 p4_mites_matrix_all = pd.read_csv('../files/P4_matrix_all.csv', sep='\t')
 p4_mites_matrix_ref = pd.read_csv('../files/P4_ref_matrix_sort_2000_all.csv', sep='\t')
 p4_mites_matrix_nonref = pd.read_csv('../files/P4_nonref_matrix_all.csv', sep='\t')
 
 
-def columns_filter(mites_matrix, pop_symbol):
+def columns_filter(mites_matrix, pop_symbol):  # filter columns from MITEs matrix
     pop_cols = mites_matrix.filter(like=pop_symbol).columns
     mites_matrix[pop_cols] = mites_matrix[pop_cols].astype(float)
     return pop_cols
@@ -25,7 +26,7 @@ def columns_filter(mites_matrix, pop_symbol):
 cols = columns_filter(p4_mites_matrix_all, 'P4-')
 
 
-def mites_counts_all(te_matrix):
+def mites_counts_all(te_matrix):  # generate .csv file with sum of MITEs for every family in all samples
     # calculate sum of MITEs for every family
     te_family_no = te_matrix.groupby(['family']).size()
     te_family_no_sorted = te_family_no.sort_values(ascending=False)
@@ -41,7 +42,7 @@ def mites_counts_all(te_matrix):
 
     print(te_matrix.to_string(max_rows=30))
 
-    # calculate MITEs in every sample for all families
+    # calculate MITEs insertions in every sample for all families
     te_in_samples = pd.DataFrame()
 
     for col in cols:
@@ -91,9 +92,9 @@ def mites_counts_all(te_matrix):
 # mites_counts_all(p1_mites_matrix_all)
 
 
-def mites_counts_ins(te_matrix):
-
+def mites_counts_ins(te_matrix):  # generate .csv files for homo- and heterozygous MITE insertions
     # for homozygous insertions - put family name instead of value if >= 0.7
+    # - uncomment if needed instead of heterozygous (comment lines 101-102 and 141)
     # te_matrix[cols] = te_matrix[cols].mask(te_matrix[cols].apply(pd.to_numeric, errors='coerce').ge(0.7),
     #                                        te_matrix['family'], axis=0)
 
@@ -137,6 +138,7 @@ def mites_counts_ins(te_matrix):
     print(te_in_samples.to_string())
 
     # saving as .csv
+    # te_in_samples.to_csv('../files/P4_MITEs_homozyg_ins_count.csv', sep='\t')
     te_in_samples.to_csv('../files/P4_MITEs_heterozyg_ins_count.csv', sep='\t')
 
 
@@ -149,6 +151,7 @@ p1_hetero_ins = pd.read_csv('../files/P1_MITEs_heterozyg_ins_count.csv', sep='\t
 p4_homo_ins = pd.read_csv('../files/P4_MITEs_homozyg_ins_count.csv', sep='\t')
 p4_hetero_ins = pd.read_csv('../files/P4_MITEs_heterozyg_ins_count.csv', sep='\t')
 
+# create df with sum of homo- and heterozygous insertions
 # df_sum = pd.concat([p1_homo_ins, p1_hetero_ins]).groupby(['family']).sum().reset_index().set_index('family')
 df_sum = pd.concat([p4_homo_ins, p4_hetero_ins]).groupby(['family']).sum().reset_index().set_index('family')
 print(df_sum)
@@ -166,7 +169,7 @@ df_sum = df_sum.reindex(df_sum_sort_index.index)
 print(df_sum)
 
 
-def ins_table_final(homo_ins, hetero_ins, sum_ins):
+def ins_table_final(homo_ins, hetero_ins, sum_ins):  # create final table for MITEs insertions (homo-, hetero- and sum)
     homo_ins = homo_ins.set_index('family')
     hetero_ins = hetero_ins.set_index('family')
     final_table = (pd.concat([sum_ins, homo_ins, hetero_ins], keys=['sum', 'homo', 'hetero']).swaplevel().
@@ -191,6 +194,7 @@ def ins_table_final(homo_ins, hetero_ins, sum_ins):
 
     final_table_reset = (final_table_reset.set_index([final_table_reset['family'], final_table_reset['ins']]).
                          drop(columns=['family', 'ins']))
+
     print(final_table_reset)
 
     final_table_reset.to_csv('../files/P4_MITEs_ins_all_count.csv', sep='\t')
