@@ -1,5 +1,6 @@
 import pandas as pd
 import time
+import ast
 
 start_time = time.time()
 
@@ -50,8 +51,8 @@ def concat_and_count_bins(bins, rest_bins):
 # de_and_bins_p1 = concat_and_count_bins(de_bins_p1, de_bins_rest_p1)
 # xloc_and_bins_p1 = concat_and_count_bins(xloc_bins_p1, xloc_rest_bins_p1)
 
-# de_and_bins_p4 = concat_and_count_bins(de_bins_p4, de_bins_rest_p4)
-xloc_and_bins_p4 = concat_and_count_bins(xloc_bins_p4, xloc_rest_bins_p4)
+de_and_bins_p4 = concat_and_count_bins(de_bins_p4, de_bins_rest_p4)
+# xloc_and_bins_p4 = concat_and_count_bins(xloc_bins_p4, xloc_rest_bins_p4)
 
 
 def te_in_bins_and_genes(te_list, genes_and_bins):
@@ -84,10 +85,32 @@ def te_in_bins_and_genes(te_list, genes_and_bins):
     print(f'Sum of MITEs in bins: {len(te_in_bins)} and with the same sample sets: {len(te_in_bins_sets)}')
     print(f'Sum of MITEs in genes: {len(te_in_genes)} and with the same sample sets: {len(te_in_genes_sets)}')
 
+    te_in_genes_sets = ((te_in_genes_sets.drop(
+        columns=['set_no', 'unique_no', 'one_one', 'zero_zero', 'start_gene', 'end_gene', 'GeneID', 'baseMean',
+                 'log2FoldChange', 'lfcSE', 'stat', 'pvalue', 'padj', 'chr_te']).
+                        rename(columns={'chr': 'chromosome', 'Start': 'start_gene', 'End': 'end_gene', 'gene_name': 'gene_symbol',
+                                        'Biotype': 'biotype', 'Description': 'gene_function', 'start': 'start_te',
+                                        'end': 'end_te'})).sort_values(by=['chromosome', 'start_te']).
+                        reset_index(drop=True))
+
+    te_in_genes_sets = te_in_genes_sets[['chromosome', 'family', 'start_te', 'end_te', 'te_ins', 'no_te_ins', 'gene_symbol',
+                                         'start_gene', 'end_gene', 'gene_strand', 'biotype', 'gene_function',
+                                         'start_bin', 'end_bin']]
+
+    te_in_genes_sets['te_ins'] = te_in_genes_sets['te_ins'].apply(ast.literal_eval)
+    te_in_genes_sets['te_ins'] = [', '.join(map(str, l)) for l in te_in_genes_sets['te_ins']]
+
+    te_in_genes_sets['no_te_ins'] = te_in_genes_sets['no_te_ins'].apply(ast.literal_eval)
+    te_in_genes_sets['no_te_ins'] = [', '.join(map(str, l)) for l in te_in_genes_sets['no_te_ins']]
+
+    print(te_in_genes_sets.to_string())
+
+    te_in_genes_sets.to_csv('../files/P4_MITEs_DE_bins.csv', sep='\t', index=False)
+
 
 # te_in_bins_and_genes(mite_list_p1, de_and_bins_p1)
 # te_in_bins_and_genes(mite_list_p1, xloc_and_bins_p1)
-# te_in_bins_and_genes(mite_list_p4, de_and_bins_p4)
-te_in_bins_and_genes(mite_list_p4, xloc_and_bins_p4)
+te_in_bins_and_genes(mite_list_p4, de_and_bins_p4)
+# te_in_bins_and_genes(mite_list_p4, xloc_and_bins_p4)
 
 print("--- %s seconds ---" % (time.time() - start_time))
