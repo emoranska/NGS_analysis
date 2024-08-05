@@ -5,6 +5,7 @@ import ast
 start_time = time.time()
 
 df = pd.read_csv('~/Pulpit/burak/homozyg_regions/bins/P4_EL10_chr1_9_homozyg_bins_with_genes.csv', sep='\t')
+# df = pd.read_csv('~/Pobrane/P4_rest_bins_with_genes.csv', sep='\t')
 
 # create columns with 3 first samples for 1/1 and 0/0
 df['1/1_3first'] = df['1/1'].apply(lambda x: ast.literal_eval(x)[:3])
@@ -30,7 +31,9 @@ cols = ["one_one_3first", "zero_zero_3first"]
 df["unique_no"] = df[cols].merge(df_unique[cols].reset_index(), how="left")["index"]
 print(df.to_string(max_rows=50))
 
-df_with_genes = pd.read_csv('~/Pulpit/burak/homozyg_regions/bins/P4_chr1_9_genes_in_homozyg_bins.csv', sep='\t')
+df_with_genes = pd.read_csv('~/Pulpit/burak/homozyg_regions/bins/P4_chr1_9_genes_in_homozyg_bins.csv',
+                            sep='\t')
+# df_with_genes = pd.read_csv('~/PycharmProjects/NGS_analysis/P4_chr1_9_genes_in_rest_bins_to_add.csv', sep='\t')
 print(df_with_genes.to_string(max_rows=50))
 
 df_merged = df_with_genes.merge(df, on=['chr', 'start', 'end']).rename(columns={'start': 'start_bin', 'end': 'end_bin',
@@ -41,3 +44,4 @@ df_merged = df_with_genes.merge(df, on=['chr', 'start', 'end']).rename(columns={
 print(df_merged.to_string(max_rows=50))
 
 df_merged.to_csv('P4_list_genes_in_homozyg_bins.csv', sep='\t', index=False)
+# df_merged.to_csv('../P4_list_genes_in_rest_bins_to_add.csv', sep='\t', index=False)
