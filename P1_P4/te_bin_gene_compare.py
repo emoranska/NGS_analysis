@@ -56,11 +56,11 @@ def concat_and_count_bins(bins, rest_bins):
     return bins_and_rest
 
 
-# de_and_bins_p1 = concat_and_count_bins(de_bins_p1, de_bins_rest_p1)
+de_and_bins_p1 = concat_and_count_bins(de_bins_p1, de_bins_rest_p1)
 # xloc_and_bins_p1 = concat_and_count_bins(xloc_bins_p1, xloc_rest_bins_p1)
 
 # de_and_bins_p4 = concat_and_count_bins(de_bins_p4, de_bins_rest_p4)
-xloc_and_bins_p4 = concat_and_count_bins(xloc_bins_p4, xloc_rest_bins_p4)
+# xloc_and_bins_p4 = concat_and_count_bins(xloc_bins_p4, xloc_rest_bins_p4)
 
 
 def clean_sample_list(col):
@@ -71,41 +71,41 @@ def clean_sample_list(col):
 
 def te_in_bins_and_genes(te_list, genes_and_bins):
 
-    # # find MITEs in bins with the same sample sets for annotated genes
-    # te_in_bins_sets = ((genes_and_bins.merge(te_list, how='cross').
-    #                    query('(start >= start_bin) & (end <= end_bin) & (chr == chr_te) & ((te_ins == one_one) & '
-    #                          '(no_te_ins == zero_zero) | (te_ins == zero_zero) & (no_te_ins == one_one))').
-    #                    drop_duplicates(['start_bin', 'end_bin', 'chr', 'family', 'start', 'end', 'te_ins', 'no_te_ins'])
-    #                    .drop(columns=['start_gene', 'end_gene', 'GeneID', 'baseMean', 'stat', 'pvalue', 'padj',
-    #                                   'Unnamed: 0', 'chr_te']).
-    #                    rename(columns={'chr': 'chromosome', 'Start': 'start_gene', 'End': 'end_gene',
-    #                                    'gene_name': 'gene_symbol', 'Strand': 'gene_strand', 'Biotype': 'biotype',
-    #                                    'Description': 'gene_function', 'start': 'start_te', 'end': 'end_te'})).
-    #                    sort_values(by=['chromosome', 'start_te']).reset_index(drop=True))
-    #
-    # te_in_bins_sets = te_in_bins_sets[['chromosome', 'family', 'start_te', 'end_te', 'te_ins', 'no_te_ins', 'set_no',
-    #                                    'unique_no', 'start_bin', 'end_bin',
-    #                                    'gene_symbol', 'start_gene', 'end_gene', 'gene_strand', 'one_one', 'zero_zero',
-    #                                    'log2FoldChange', 'lfcSE', 'biotype', 'gene_function'
-    #                                    ]]
-
-    # find MITEs in bins with the same sample sets for XLOC
+    # find MITEs in bins with the same sample sets for annotated genes
     te_in_bins_sets = ((genes_and_bins.merge(te_list, how='cross').
                        query('(start >= start_bin) & (end <= end_bin) & (chr == chr_te) & ((te_ins == one_one) & '
                              '(no_te_ins == zero_zero) | (te_ins == zero_zero) & (no_te_ins == one_one))').
-                       drop_duplicates(['start_bin', 'end_bin', 'chr', 'family', 'start', 'end', 'te_ins',
-                       'no_te_ins'])
-                       .drop(columns=['baseMean', 'stat', 'pvalue', 'padj', 'Unnamed: 0', 'chr_te']).
+                       drop_duplicates(['start_bin', 'end_bin', 'chr', 'family', 'start', 'end', 'te_ins', 'no_te_ins'])
+                       .drop(columns=['start_gene', 'end_gene', 'GeneID', 'baseMean', 'stat', 'pvalue', 'padj',
+                                      'Unnamed: 0', 'chr_te']).
                        rename(columns={'chr': 'chromosome', 'Start': 'start_gene', 'End': 'end_gene',
-                                       'GeneID': 'gene_symbol', 'Strand': 'gene_strand', 'Biotype': 'biotype',
-                                       'start': 'start_te', 'end': 'end_te'})).
+                                       'gene_name': 'gene_symbol', 'Strand': 'gene_strand', 'Biotype': 'biotype',
+                                       'Description': 'gene_function', 'start': 'start_te', 'end': 'end_te'})).
                        sort_values(by=['chromosome', 'start_te']).reset_index(drop=True))
 
     te_in_bins_sets = te_in_bins_sets[['chromosome', 'family', 'start_te', 'end_te', 'te_ins', 'no_te_ins', 'set_no',
                                        'unique_no', 'start_bin', 'end_bin',
                                        'gene_symbol', 'start_gene', 'end_gene', 'gene_strand', 'one_one', 'zero_zero',
-                                       'log2FoldChange', 'lfcSE', 'biotype'
+                                       'log2FoldChange', 'lfcSE', 'biotype', 'gene_function'
                                        ]]
+
+    # # find MITEs in bins with the same sample sets for XLOC
+    # te_in_bins_sets = ((genes_and_bins.merge(te_list, how='cross').
+    #                    query('(start >= start_bin) & (end <= end_bin) & (chr == chr_te) & ((te_ins == one_one) & '
+    #                          '(no_te_ins == zero_zero) | (te_ins == zero_zero) & (no_te_ins == one_one))').
+    #                    drop_duplicates(['start_bin', 'end_bin', 'chr', 'family', 'start', 'end', 'te_ins',
+    #                    'no_te_ins'])
+    #                    .drop(columns=['baseMean', 'stat', 'pvalue', 'padj', 'Unnamed: 0', 'chr_te']).
+    #                    rename(columns={'chr': 'chromosome', 'Start': 'start_gene', 'End': 'end_gene',
+    #                                    'GeneID': 'gene_symbol', 'Strand': 'gene_strand', 'Biotype': 'biotype',
+    #                                    'start': 'start_te', 'end': 'end_te'})).
+    #                    sort_values(by=['chromosome', 'start_te']).reset_index(drop=True))
+    #
+    # te_in_bins_sets = te_in_bins_sets[['chromosome', 'family', 'start_te', 'end_te', 'te_ins', 'no_te_ins', 'set_no',
+    #                                    'unique_no', 'start_bin', 'end_bin',
+    #                                    'gene_symbol', 'start_gene', 'end_gene', 'gene_strand', 'one_one', 'zero_zero',
+    #                                    'log2FoldChange', 'lfcSE', 'biotype'
+    #                                    ]]
 
     te_in_bins_sets['te_ins'] = clean_sample_list(te_in_bins_sets['te_ins'])
     te_in_bins_sets['no_te_ins'] = clean_sample_list(te_in_bins_sets['no_te_ins'])
@@ -135,58 +135,62 @@ def te_in_bins_and_genes(te_list, genes_and_bins):
     print(f'Sum of MITEs with the same 3 and 3 samples in set as sets to DE (from bins): {len(te_list)}')
     print(f'Sum of MITEs in bins with the same sample sets: {len(te_in_bins_sets)}')
 
+    # calculate sum of bins with MITEs
     unique_bins_count_m = te_in_genes_sets.drop_duplicates(subset=['start_bin', 'end_bin'])
     print(f'Number of bins with MITEs in DE genes: {len(unique_bins_count_m)}')
 
-    # # cleaning the output for annotated genes
-    # te_in_genes_sets = ((te_in_genes_sets.drop(
-    #     columns=['start_gene', 'end_gene', 'GeneID', 'baseMean', 'stat', 'pvalue', 'padj', 'chr_te']).
-    #                     rename(columns={'chr': 'chromosome', 'Start': 'start_gene', 'End': 'end_gene',
-    #                                     'gene_name': 'gene_symbol', 'Strand': 'gene_strand', 'Biotype': 'biotype',
-    #                                     'Description': 'gene_function', 'start': 'start_te',
-    #                                     'end': 'end_te'})).sort_values(by=['chromosome', 'start_te']).
-    #                     reset_index(drop=True))
-    #
-    # te_in_genes_sets = te_in_genes_sets[['chromosome', 'family', 'start_te', 'end_te', 'te_ins', 'no_te_ins',
-    #                                      'gene_symbol', 'start_gene', 'end_gene', 'gene_strand', 'one_one',
-    #                                      'zero_zero',
-    #                                      'log2FoldChange', 'lfcSE', 'biotype', 'gene_function', 'start_bin',
-    #                                      'end_bin',
-    #                                      'set_no', 'unique_no']]
-
-    # cleaning the output for XLOC genes
+    # cleaning the output for annotated genes
     te_in_genes_sets = ((te_in_genes_sets.drop(
-        columns=['baseMean', 'stat', 'pvalue', 'padj', 'chr_te']).
-                        rename(columns={'chr': 'chromosome', 'GeneID': 'gene_symbol', 'Strand': 'gene_strand',
-                                        'Start': 'start_gene', 'End': 'end_gene',
-                                        'Biotype': 'biotype', 'start': 'start_te',
+        columns=['start_gene', 'end_gene', 'GeneID', 'baseMean', 'stat', 'pvalue', 'padj', 'chr_te']).
+                        rename(columns={'chr': 'chromosome', 'Start': 'start_gene', 'End': 'end_gene',
+                                        'gene_name': 'gene_symbol', 'Strand': 'gene_strand', 'Biotype': 'biotype',
+                                        'Description': 'gene_function', 'start': 'start_te',
                                         'end': 'end_te'})).sort_values(by=['chromosome', 'start_te']).
                         reset_index(drop=True))
 
     te_in_genes_sets = te_in_genes_sets[['chromosome', 'family', 'start_te', 'end_te', 'te_ins', 'no_te_ins',
                                          'gene_symbol', 'start_gene', 'end_gene', 'gene_strand', 'one_one',
                                          'zero_zero',
-                                         'log2FoldChange', 'lfcSE', 'biotype', 'start_bin', 'end_bin',
+                                         'log2FoldChange', 'lfcSE', 'biotype', 'gene_function', 'start_bin',
+                                         'end_bin',
                                          'set_no', 'unique_no']]
+
+    # # cleaning the output for XLOC genes
+    # te_in_genes_sets = ((te_in_genes_sets.drop(
+    #     columns=['baseMean', 'stat', 'pvalue', 'padj', 'chr_te']).
+    #                     rename(columns={'chr': 'chromosome', 'GeneID': 'gene_symbol', 'Strand': 'gene_strand',
+    #                                     'Start': 'start_gene', 'End': 'end_gene',
+    #                                     'Biotype': 'biotype', 'start': 'start_te',
+    #                                     'end': 'end_te'})).sort_values(by=['chromosome', 'start_te']).
+    #                     reset_index(drop=True))
+    #
+    # te_in_genes_sets = te_in_genes_sets[['chromosome', 'family', 'start_te', 'end_te', 'te_ins', 'no_te_ins',
+    #                                      'gene_symbol', 'start_gene', 'end_gene', 'gene_strand', 'one_one',
+    #                                      'zero_zero',
+    #                                      'log2FoldChange', 'lfcSE', 'biotype', 'start_bin', 'end_bin',
+    #                                      'set_no', 'unique_no']]
 
     te_in_genes_sets['te_ins'] = clean_sample_list(te_in_genes_sets['te_ins'])
     te_in_genes_sets['no_te_ins'] = clean_sample_list(te_in_genes_sets['no_te_ins'])
     te_in_genes_sets['one_one'] = clean_sample_list(te_in_genes_sets['one_one'])
     te_in_genes_sets['zero_zero'] = clean_sample_list(te_in_genes_sets['zero_zero'])
 
+    # calculate sum of genes with MITEs
     unique_genes_count_m = te_in_genes_sets.drop_duplicates(subset=['gene_symbol'])
     print(f'Number of DE genes with MITEs built-in: {len(unique_genes_count_m)}')
 
-    print(f'Sum of MITEs in DE genes and bins with the same sample sets: {len(te_in_genes_sets)}')
+    # calculate sum of MITEs
+    unique_mites_number = te_in_genes_sets.drop_duplicates(subset=['chromosome', 'family', 'start_te', 'end_te'])
+    print(f'Sum of MITEs in DE genes and bins with the same sample sets: {len(unique_mites_number)}')
     print(te_in_genes_sets.to_string(max_rows=30))
 
     # te_in_genes_sets.to_csv('../files/P4_correct_MITEs_DE_bins_1.csv', sep='\t', index=False)
-    te_in_genes_sets.to_csv('../files/P4_correct_MITEs_updown2000_XLOC_DE_bins.csv', sep='\t', index=False)
+    # te_in_genes_sets.to_csv('../files/P4_correct_MITEs_updown2000_XLOC_DE_bins.csv', sep='\t', index=False)
 
 
-# te_in_bins_and_genes(mite_list_p1, de_and_bins_p1)
+te_in_bins_and_genes(mite_list_p1, de_and_bins_p1)
 # te_in_bins_and_genes(mite_list_p1, xloc_and_bins_p1)
 # te_in_bins_and_genes(mite_list_p4, de_and_bins_p4)
-te_in_bins_and_genes(mite_list_p4, xloc_and_bins_p4)
+# te_in_bins_and_genes(mite_list_p4, xloc_and_bins_p4)
 
 print("--- %s seconds ---" % (time.time() - start_time))
