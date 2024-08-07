@@ -30,6 +30,7 @@ print(f'Number of bins with MITEs in DE genes: {len(unique_bins_count_ud)}')
 
 print(ud_all.to_string(max_rows=30))
 
+# add MITEs in XLOC genes to the MITEs list for annotated genes
 xloc = pd.read_csv('../files/P4_correct_MITEs_XLOC_DE_bins.csv', sep='\t')
 
 m_all_and_xloc = pd.concat([m_all, xloc], ignore_index=True).sort_values(by=['chromosome', 'start_te']).fillna('-')
@@ -41,3 +42,8 @@ ud_all_and_xloc = (pd.concat([ud_all, xloc_ud], ignore_index=True).sort_values(b
                    fillna('-'))
 print(ud_all_and_xloc.to_string(max_rows=50))
 ud_all_and_xloc.to_csv('../files/P4_correct_MITEs_updown2000_DE_bins_all_and_XLOC.csv', sep='\t', index=False)
+
+# check if there are the same MITEs in P1 and P4
+m_p1 = pd.read_csv('../files/P1_correct_MITEs_DE_bins.csv', sep='\t')
+check_the_same_mites = m_all.merge(m_p1, how='inner', on=['chromosome', 'family', 'start_te', 'end_te'])
+print(check_the_same_mites.to_string())
