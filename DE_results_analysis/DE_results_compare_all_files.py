@@ -6,17 +6,20 @@ from pathlib import Path
 start_time = time.time()
 
 # genes_in_bins = pd.read_csv('../files/P1_list_genes_in_rest_bins_to_add.csv', sep='\t')
-genes_in_bins = pd.read_csv('../files/P4_list_genes_in_rest_bins_to_add.csv', sep='\t')
+# genes_in_bins = pd.read_csv('../files/P4_list_genes_in_rest_bins_to_add.csv', sep='\t')
+
+genes_in_bins = pd.read_csv('../files/P1_all_EL10_genes_in_all_bins.csv', sep='\t')
+print(genes_in_bins.to_string(max_rows=50))
 
 genes_legend = pd.read_csv('../../../Pobrane/genes.csv', sep=',').rename(columns={'Gene': 'GeneID'})
 
-# list_to_de = pd.read_csv('../../../Pobrane/P1_list_to_DE_20more_genes.csv', sep='\t')
-list_to_de = pd.read_csv('../../../Pobrane/P4_list_to_DE_20more_genes.csv', sep='\t')
+list_to_de = pd.read_csv('../../../Pobrane/P1_list_to_DE_20more_genes.csv', sep='\t')
+# list_to_de = pd.read_csv('../../../Pobrane/P4_list_to_DE_20more_genes.csv', sep='\t')
 
 list_to_de['df_unique_index'] = list_to_de['df_unique_index'].apply(ast.literal_eval)
 
-# input_folder = Path("~/Pobrane/Emi_P1")
-input_folder = Path("~/Pobrane/Emi_P4")
+input_folder = Path("~/Pobrane/Emi_P1")
+# input_folder = Path("~/Pobrane/Emi_P4")
 
 
 def de_results_with_genes_in_bins():
@@ -34,11 +37,13 @@ def de_results_with_genes_in_bins():
         # print(len(de_results))
 
         # filter DE results for padj value < 0.05
-        de_padj_filter = de_results[de_results['padj'] < 0.05].reset_index(drop=True)
+        # de_padj_filter = de_results[de_results['padj'] < 0.05].reset_index(drop=True)
         # print(de_padj_filter.to_string(max_rows=30))
 
+        # without filtering DE results with padj value
+        de_padj_filter = de_results
         # print list with sum of genes with padj < 0.05 identified in DE for every sample set
-        print(len(de_padj_filter))
+        # print(len(de_padj_filter))
 
         # merge filtered DE results with genes legend to identify genes names according to EL10 annotation
         de_padj_filter_merged = (de_padj_filter.merge(genes_legend, on=['GeneID']).sort_values
@@ -56,14 +61,17 @@ def de_results_with_genes_in_bins():
 
         # check if there are the same genes in bins for appropriate sample set as identified in DE analysis with
         # padj < 0.05
+        # de_genes_in_bins = genes_in_bins_for_set.merge(de_padj_filter_merged, on=['gene_name']).drop(
+        #     columns=['Chromosome', 'Strand'])
+        # de_genes_in_bins['set_no'] = idx
+        # de_genes_in_bins = de_genes_in_bins.reindex(columns=['set_no', 'unique_no', 'one_one', 'zero_zero', 'chr',
+        #                                                      'start_bin', 'end_bin', 'start_gene', 'end_gene',
+        #                                                      'gene_name', 'gene_strand', 'GeneID', 'Start', 'End',
+        #                                                      'baseMean', 'log2FoldChange', 'lfcSE', 'stat', 'pvalue',
+        #                                                      'padj', 'Biotype', 'Description'])
+
         de_genes_in_bins = genes_in_bins_for_set.merge(de_padj_filter_merged, on=['gene_name']).drop(
-            columns=['genes_count', 'Chromosome', 'Strand'])
-        de_genes_in_bins['set_no'] = idx
-        de_genes_in_bins = de_genes_in_bins.reindex(columns=['set_no', 'unique_no', 'one_one', 'zero_zero', 'chr',
-                                                             'start_bin', 'end_bin', 'start_gene', 'end_gene',
-                                                             'gene_name', 'gene_strand', 'GeneID', 'Start', 'End',
-                                                             'baseMean', 'log2FoldChange', 'lfcSE', 'stat', 'pvalue',
-                                                             'padj', 'Biotype', 'Description'])
+            columns=['Chromosome', 'Strand'])
         # print(de_genes_in_bins.to_string())
 
         # pd.append deprecated in pandas > 2.0
@@ -71,10 +79,20 @@ def de_results_with_genes_in_bins():
         # final_df = final_df.concat(de_genes_in_bins).reset_index(drop=True)
         final_df = pd.concat([final_df, de_genes_in_bins], ignore_index=True)
 
-    print(final_df.to_string(max_rows=50))
+    # print(final_df.to_string(max_rows=50))
     # final_df.to_csv('P1_DE_results_comparing_with_genes_in_bins.csv', sep='\t', index=False)
     # final_df.to_csv('P4_DE_results_comparing_with_genes_in_bins.csv', sep='\t', index=False)
     # final_df.to_csv('P1_DE_results_comparing_with_genes_in_rest_bins.csv', sep='\t', index=False)
+    return final_df
+
+
+de_df = genes_in_bins.merge(de_results_with_genes_in_bins(), how='outer',
+                            on=['chr', 'start_bin', 'end_bin', 'bin_length', 'bin_genes_count', 'start_gene',
+                                'end_gene', 'gene_name', 'gene_strand', 'set_no', 'unique_no', 'one_one', 'zero_zero'])
+
+# print(de_df.to_string(max_rows=400))
+de_df.to_csv('../files/P1_all_EL10_genes_in_all_bins_with_DE_results.csv', sep='\t', index=False)
+
 
 def xloc_checking():
     final_df = pd.DataFrame()
