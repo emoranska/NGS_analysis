@@ -2,24 +2,20 @@ import pandas as pd
 import ast
 import time
 from pathlib import Path
+import numpy as np
 
 start_time = time.time()
 
 # genes_in_bins = pd.read_csv('../files/P1_list_genes_in_rest_bins_to_add.csv', sep='\t')
-# genes_in_bins = pd.read_csv('../files/P4_list_genes_in_rest_bins_to_add.csv', sep='\t')
 
-genes_in_bins = pd.read_csv('../files/P1_all_EL10_genes_in_all_bins.csv', sep='\t')
-print(genes_in_bins.to_string(max_rows=50))
+genes_in_bins = pd.read_csv('../files/P4_all_EL10_genes_in_all_bins.csv', sep='\t')
 
 genes_legend = pd.read_csv('../../../Pobrane/genes.csv', sep=',').rename(columns={'Gene': 'GeneID'})
 
-list_to_de = pd.read_csv('../../../Pobrane/P1_list_to_DE_20more_genes.csv', sep='\t')
-# list_to_de = pd.read_csv('../../../Pobrane/P4_list_to_DE_20more_genes.csv', sep='\t')
-
+list_to_de = pd.read_csv('../../../Pobrane/P4_list_to_DE_20more_genes.csv', sep='\t')
 list_to_de['df_unique_index'] = list_to_de['df_unique_index'].apply(ast.literal_eval)
 
-input_folder = Path("~/Pobrane/Emi_P1")
-# input_folder = Path("~/Pobrane/Emi_P4")
+input_folder = Path("~/Pobrane/Emi_P4")
 
 
 def de_results_with_genes_in_bins():
@@ -30,7 +26,7 @@ def de_results_with_genes_in_bins():
         # read the files with DE results according to path and current sample set number <idx> in loop
         file_name = f'one_one_zero_zero_{idx}_deseq2.xls'
         file_path = input_folder / file_name
-        de_results = pd.read_table(file_path)
+        # de_results = pd.read_table(file_path)
         # print(de_results.to_string(max_rows=30))
 
         # print list with sum of all genes identified in DE for every sample set
@@ -40,10 +36,10 @@ def de_results_with_genes_in_bins():
         # de_padj_filter = de_results[de_results['padj'] < 0.05].reset_index(drop=True)
         # print(de_padj_filter.to_string(max_rows=30))
 
-        # without filtering DE results with padj value
-        de_padj_filter = de_results
         # print list with sum of genes with padj < 0.05 identified in DE for every sample set
         # print(len(de_padj_filter))
+
+        de_padj_filter = pd.read_table(file_path)
 
         # merge filtered DE results with genes legend to identify genes names according to EL10 annotation
         de_padj_filter_merged = (de_padj_filter.merge(genes_legend, on=['GeneID']).sort_values
@@ -90,15 +86,63 @@ de_df = genes_in_bins.merge(de_results_with_genes_in_bins(), how='outer',
                             on=['chr', 'start_bin', 'end_bin', 'bin_length', 'bin_genes_count', 'start_gene',
                                 'end_gene', 'gene_name', 'gene_strand', 'set_no', 'unique_no', 'one_one', 'zero_zero'])
 
-# print(de_df.to_string(max_rows=400))
-de_df.to_csv('../files/P1_all_EL10_genes_in_all_bins_with_DE_results.csv', sep='\t', index=False)
+de_df.loc[de_df['log2FoldChange'] > 0, 'de_results'] = 'up'
+de_df.loc[de_df['log2FoldChange'] < 0, 'de_results'] = 'down'
+de_updown = de_df.pop('de_results')
+de_df.insert(14, de_updown.name, de_updown)
+de_df['de_results'] = de_df['de_results']
+
+# print(de_df.to_string(max_rows=200))
+de_df.to_csv('../files/P4_all_EL10_genes_in_all_bins_with_DE_results.csv', sep='\t', index=False)
+
+kallisto = pd.read_csv('../files/kallisto_P4.csv', sep='\t')
+
+out = de_df.merge(kallisto, on='GeneID', how='left')
+# print(out.to_string(max_rows=50))
+# print(out.dtypes)
+
+out['one_one'] = out['one_one'].fillna('None')
+out['one_one'] = [ast.literal_eval(samples) for samples in out['one_one']]
+print(out['one_one'].to_string(max_rows=50))
+
+out['zero_zero'] = out['zero_zero'].fillna('None')
+out['zero_zero'] = [ast.literal_eval(samples) for samples in out['zero_zero']]
+print(out['zero_zero'].to_string(max_rows=50))
+
+out_one = out.copy()
+o = out_one['one_one'].str.join('|').str.get_dummies().astype(bool)
+# print(o.to_string(max_rows=50))
+out_one.loc[:, o.columns] = out_one.loc[:, o.columns].where(o)
+out_one['mean_one_one'] = out_one.loc[:, o.columns].mean(axis=1)
+out_one['std_one_one'] = out_one.loc[:, o.columns].std(axis=1)
+print(out_one.to_string(max_rows=50))
+
+out_zero = out.copy()
+z = out_zero['zero_zero'].str.join('|').str.get_dummies().astype(bool)
+# print(z.to_string(max_rows=50))
+out_zero.loc[:, z.columns] = out_zero.loc[:, z.columns].where(z)
+out_zero['mean_zero_zero'] = out_zero.loc[:, z.columns].mean(axis=1)
+out_zero['std_zero_zero'] = out_zero.loc[:, z.columns].std(axis=1)
+print(out_zero.to_string(max_rows=50))
+
+k_one_one = out_one.iloc[:, -14:]
+k_zero_zero = out_zero.iloc[:, -14:]
+k_zero_last2 = k_zero_zero.loc[:, 'mean_zero_zero':]
+
+k_all = k_one_one.fillna(k_zero_zero)
+k_all = pd.concat([k_all, k_zero_last2], axis=1)
+print(k_all.to_string(max_rows=30))
+
+out_with_kallisto = pd.concat([de_df, k_all], axis=1)
+print(out_with_kallisto.to_string(max_rows=200))
+out_with_kallisto.to_csv('../files/P4_all_EL10_genes_in_all_bins_with_DE_and_kallisto.csv', sep='\t', index=False)
 
 
 def xloc_checking():
     final_df = pd.DataFrame()
 
     # set the range according to numer of output files with DE results
-    for idx in range(0, 92):
+    for idx in range(0, 96):
         # read the files with DE results according to path and current sample set number <idx> in loop
         file_name = f'one_one_zero_zero_{idx}_deseq2.xls'
         file_path = input_folder / file_name
@@ -145,7 +189,7 @@ def xloc_checking():
     print(final_df.to_string())
 
 
-de_results_with_genes_in_bins()
+# de_results_with_genes_in_bins()
 # xloc_checking()
 
 print("--- %s seconds ---" % (time.time() - start_time))
