@@ -24,6 +24,8 @@ all_together = (((bins_and_de.merge(mites, how='outer', on=['chr', 'start_bin', 
                                                          'set_no', 'unique_no']).
                 drop(columns=['biotype', 'gene_function', 'one_one_y', 'zero_zero_y'])).
                 rename(columns={'one_one_x': 'one_one', 'zero_zero_x': 'zero_zero'})).
+                drop(columns=['log2FoldChange_y', 'lfcSE_y']).
                 sort_values(by=['chr', 'start_gene'])).reset_index(drop=True)
 
 print(all_together.to_string(max_rows=200))
+all_together.to_csv('../files/P1_alltogether.csv', sep='\t', index=False)
