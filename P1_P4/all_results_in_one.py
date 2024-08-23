@@ -115,7 +115,12 @@ print(ref_check.to_string(max_rows=30))
 nonref_check = mites_in_genes.merge(te_nonref, on=['chr', 'family', 'start_te', 'end_te'])
 nonref_check['te_type'] = 'nonref'
 print(nonref_check.to_string(max_rows=30))
-# mites_in_genes =
+
+type_checked = pd.concat([ref_check, nonref_check])
+print(type_checked.to_string(max_rows=30))
+
+mites_in_genes_te_types = mites_in_genes.merge(type_checked, how='outer')
+print(mites_in_genes_te_types.to_string(max_rows=100))
 
 # print(mites_in_genes.to_string(max_rows=50))
 # all_together.to_csv('../files/P1_alltogether.csv', sep='\t', index=False)
