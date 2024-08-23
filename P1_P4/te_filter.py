@@ -4,84 +4,90 @@ import ast
 
 start_time = time.time()
 
-sample_sets = pd.read_csv('../files/P1_list_to_DE_20more_genes.csv', sep='\t')
-sample_sets['one_one'] = sample_sets['one_one'].apply(lambda x: ast.literal_eval(x))
-sample_sets['zero_zero'] = sample_sets['zero_zero'].apply(lambda x: ast.literal_eval(x))
-print(sample_sets.iloc[0,2], type(sample_sets.iloc[0,2]))
-print(sample_sets.to_string(max_rows=20))
+samples = pd.read_csv('../files/P1_list_to_DE_20more_genes.csv', sep='\t')
+te_all = pd.read_csv('../files/P1_matrix_all.csv', sep='\t')
 
-te_matrix = pd.read_csv('../files/P1_matrix_all.csv', sep='\t')
-# te_matrix = pd.read_csv('../files/P4_matrix_all.csv', sep='\t')
-# print(te_matrix.to_string(max_rows=30))
 
-te_matrix['start'] = te_matrix['start'].astype(int)
-te_matrix['end'] = te_matrix['end'].astype(int)
+def te_filter(sample_sets, te_matrix):
+    sample_sets['one_one'] = sample_sets['one_one'].apply(lambda x: ast.literal_eval(x))
+    sample_sets['zero_zero'] = sample_sets['zero_zero'].apply(lambda x: ast.literal_eval(x))
+    print(sample_sets.iloc[0, 2], type(sample_sets.iloc[0, 2]))
+    print(sample_sets.to_string(max_rows=20))
 
-cols = te_matrix.filter(like='P1-').columns
-# cols = te_matrix.filter(like='P4-').columns
-sep = ','
+    te_matrix['start'] = te_matrix['start'].astype(int)
+    te_matrix['end'] = te_matrix['end'].astype(int)
 
-# create column with list of samples with homozygous MITE insertions, interpreted as frequency > 0.7
-te_matrix['ok_ins'] = (pd.Series(te_matrix[cols].ge(0.7).dot((cols + sep))).str.rstrip(sep).str.split(',').
-                       sort_values().apply(lambda t: sorted(t)))
+    cols = te_matrix.filter(like='P1-').columns
+    # cols = te_matrix.filter(like='P4-').columns
+    sep = ','
 
-# create column with list of samples without MITE insertions (homozygous), interpreted as frequency < 0.3
-te_matrix['no_ins'] = (pd.Series(te_matrix[cols].le(0.3).dot((cols + sep))).str.rstrip(sep).str.split(',').
-                         sort_values().apply(lambda z: sorted(z)))
+    # create column with list of samples with homozygous MITE insertions, interpreted as frequency > 0.7
+    te_matrix['ok_ins'] = (pd.Series(te_matrix[cols].ge(0.7).dot((cols + sep))).str.rstrip(sep).str.split(',').
+                           sort_values().apply(lambda t: sorted(t)))
 
-# filter out empty strings from list of samples in 'ok_ins' and 'no_ins' columns !!!
-te_matrix['ok_ins'] = te_matrix['ok_ins'].apply(lambda x: list(filter(None, x)))
-te_matrix['no_ins'] = te_matrix['no_ins'].apply(lambda x: list(filter(None, x)))
+    # create column with list of samples without MITE insertions (homozygous), interpreted as frequency < 0.3
+    te_matrix['no_ins'] = (pd.Series(te_matrix[cols].le(0.3).dot((cols + sep))).str.rstrip(sep).str.split(',').
+                             sort_values().apply(lambda z: sorted(z)))
 
-te_matrix = te_matrix[(te_matrix['ok_ins'].map(lambda d: len(d) >= 3)) &
-                             (te_matrix['no_ins'].map(lambda d: len(d) >= 3))].reset_index(drop=True)
+    # filter out empty strings from list of samples in 'ok_ins' and 'no_ins' columns !!!
+    te_matrix['ok_ins'] = te_matrix['ok_ins'].apply(lambda x: list(filter(None, x)))
+    te_matrix['no_ins'] = te_matrix['no_ins'].apply(lambda x: list(filter(None, x)))
 
-print(te_matrix.iloc[0, 17], type(te_matrix.iloc[0, 17]))
-print(te_matrix.to_string(max_rows=30))
+    te_matrix = te_matrix[(te_matrix['ok_ins'].map(lambda d: len(d) >= 3)) &
+                                 (te_matrix['no_ins'].map(lambda d: len(d) >= 3))].reset_index(drop=True)
 
-matches = [x for x in sample_sets.iloc[0,2] if x in te_matrix.iloc[0, 17]]
-print(f'Matches: {matches}')
+    print(te_matrix.iloc[0, 17], type(te_matrix.iloc[0, 17]))
+    print(te_matrix.to_string(max_rows=30))
 
-sample_sets = sample_sets.drop(columns=['df_unique_index', 'genes_count'])
-out = te_matrix.merge(sample_sets, how='cross')
-print(out.to_string(max_rows=50))
+    matches = [x for x in sample_sets.iloc[0,2] if x in te_matrix.iloc[0, 17]]
+    print(f'Matches: {matches}')
 
-cols_s = list(sample_sets)
-print(cols_s)
+    sample_sets = sample_sets.drop(columns=['df_unique_index', 'genes_count'])
+    out = te_matrix.merge(sample_sets, how='cross')
+    print(out.to_string(max_rows=50))
 
-ins = out['ok_ins'].apply(set)
-print(ins)
+    sample_sets = sample_sets.drop(columns=['set_no'])
+    cols_s = list(sample_sets)
+    print(cols_s)
 
-for c in cols_s:
-    out[f'{c}_ins'] = [[x for x in lst if x in ref] for ref, lst in zip(ins, out[c])]
+    ins = out['ok_ins'].apply(set)
+    print(ins)
+    print(ins.iloc[0], len(ins.iloc[0]))
 
-print(out.to_string(max_rows=50))
+    for c in cols_s:
+        out[f'{c}_ins'] = [[x for x in lst if x in ref] for ref, lst in zip(ins, out[c])]
 
-no_ins = out['no_ins'].apply(set)
+    print(out.to_string(max_rows=50))
 
-for c in cols_s:
-    out[f'{c}_no_ins'] = [[x for x in lst if x in ref] for ref, lst in zip(no_ins, out[c])]
+    no_ins = out['no_ins'].apply(set)
 
-print(out.to_string(max_rows=50))
+    for c in cols_s:
+        out[f'{c}_no_ins'] = [[x for x in lst if x in ref] for ref, lst in zip(no_ins, out[c])]
 
-mites_in_bins = out[((out['one_one_ins'].map(lambda d: len(d) == 3)) & (out['zero_zero_no_ins'].map(lambda d:
-                                                                                                    len(d) == 3))) |
-                    ((out['zero_zero_ins'].map(lambda d: len(d) == 3)) & (out['one_one_no_ins'].map(lambda d:
-                                                                                                    len(d) == 3)))]
+    print(out.to_string(max_rows=50))
 
-mites_in_bins = (mites_in_bins.drop(columns=cols).
-                 drop(columns=['ok_ins', 'no_ins']).reset_index(drop=True))
+    mites_in_bins = out[((out['one_one_ins'].map(lambda d: len(d) == 3)) & (out['zero_zero_no_ins'].map(lambda d:
+                                                                                                        len(d) == 3))) |
+                        ((out['zero_zero_ins'].map(lambda d: len(d) == 3)) & (out['one_one_no_ins'].map(lambda d:
+                                                                                                        len(d) == 3)))]
 
-mites_in_bins['ins'] = mites_in_bins['one_one_ins'] + mites_in_bins['zero_zero_ins']
-mites_in_bins['no_ins'] = mites_in_bins['one_one_no_ins'] + mites_in_bins['zero_zero_no_ins']
+    mites_in_bins = (mites_in_bins.drop(columns=cols).
+                     drop(columns=['ok_ins', 'no_ins']).reset_index(drop=True))
 
-print(mites_in_bins.to_string(max_rows=50))
+    mites_in_bins['ins'] = mites_in_bins['one_one_ins'] + mites_in_bins['zero_zero_ins']
+    mites_in_bins['no_ins'] = mites_in_bins['one_one_no_ins'] + mites_in_bins['zero_zero_no_ins']
 
-mites_in_bins_final = (mites_in_bins.drop(columns=['one_one', 'zero_zero', 'one_one_ins', 'zero_zero_ins',
-                                                  'one_one_no_ins', 'zero_zero_no_ins']).rename
-                       (columns={'ins': 'te_ins', 'no_ins': 'no_te_ins'}))
-print(mites_in_bins_final.to_string(max_rows=50))
-mites_in_bins_final.to_csv('../files/P1_MITEs_with_bins_sets.csv', sep='\t')
+    print(mites_in_bins.to_string(max_rows=50))
+
+    mites_in_bins_final = (mites_in_bins.drop(columns=['one_one', 'zero_zero', 'one_one_ins', 'zero_zero_ins',
+                                                      'one_one_no_ins', 'zero_zero_no_ins']).rename
+                           (columns={'ins': 'te_ins', 'no_ins': 'no_te_ins'}))
+    print(mites_in_bins_final.to_string(max_rows=50))
+    # mites_in_bins_final.to_csv('../files/P1_MITEs_with_bins_sets.csv', sep='\t')
+    return mites_in_bins_final
+
+
+p1_result = te_filter(samples, te_all)
 
 '''
 # create columns with list of 3 first samples with and without insertions - WRONG! Simplified too much!
