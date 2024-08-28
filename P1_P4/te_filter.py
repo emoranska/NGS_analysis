@@ -83,7 +83,7 @@ def te_filter(sample_sets, te_matrix):
                                                       'one_one_no_ins', 'zero_zero_no_ins']).rename
                            (columns={'ins': 'te_ins', 'no_ins': 'no_te_ins'}))
     print(mites_in_bins_final.to_string(max_rows=50))
-    # mites_in_bins_final.to_csv('../files/P1_MITEs_with_bins_sets.csv', sep='\t')
+    mites_in_bins_final.to_csv('../files/P1_MITEs_with_bins_sets.csv', sep='\t', index=False)
     return mites_in_bins_final
 
 
