@@ -39,7 +39,7 @@ def te_filter(sample_sets, te_matrix):
     print(te_matrix.iloc[0, 17], type(te_matrix.iloc[0, 17]))
     print(te_matrix.to_string(max_rows=30))
 
-    matches = [x for x in sample_sets.iloc[0,2] if x in te_matrix.iloc[0, 17]]
+    matches = [x for x in sample_sets.iloc[0, 2] if x in te_matrix.iloc[0, 17]]
     print(f'Matches: {matches}')
 
     sample_sets = sample_sets.drop(columns=['df_unique_index', 'genes_count'])
@@ -83,7 +83,7 @@ def te_filter(sample_sets, te_matrix):
                                                       'one_one_no_ins', 'zero_zero_no_ins']).rename
                            (columns={'ins': 'te_ins', 'no_ins': 'no_te_ins'}))
     print(mites_in_bins_final.to_string(max_rows=50))
-    mites_in_bins_final.to_csv('../files/P1_MITEs_with_bins_sets.csv', sep='\t', index=False)
+    # mites_in_bins_final.to_csv('../files/P1_MITEs_with_bins_sets.csv', sep='\t', index=False)
     return mites_in_bins_final
 
 
