@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from concat_bins_with_genes_and_rest import find_unique_no
 
 bins_and_de = (pd.read_csv('../files/P1_all_EL10_genes_in_all_bins_with_DE_and_kallisto.csv', sep='\t').
                drop(columns=['start_gene', 'end_gene'])).rename(columns={'Start': 'start_gene', 'End': 'end_gene'})
@@ -49,8 +50,11 @@ print(bins_to_compare.memory_usage(deep=True).sum())
 
 
 samples = pd.read_csv('../files/P1_list_to_DE_20more_genes.csv', sep='\t')
-sets_list = (pd.read_csv('../files/P1_sets_test.csv', sep='\t').
-             sort_values(by=['set_no', 'unique_no']).drop(columns=['genes_count']))
+# sets_list = (pd.read_csv('../files/P1_sets_test.csv', sep='\t').
+#              sort_values(by=['set_no', 'unique_no']).drop(columns=['genes_count']))
+sets_list = find_unique_no(samples)
+sets_list['one_one'] = [repr(x) for x in sets_list['one_one']]
+sets_list['zero_zero'] = [repr(x) for x in sets_list['zero_zero']]
 print(sets_list.to_string())
 
 mites_all = pd.read_csv('../files/P1_MITEs_with_bins_sets.csv', sep='\t')
@@ -118,8 +122,8 @@ mites_on_board = (bins_to_compare.merge(mites_with_unique_no, how='outer', on=['
 print('MITEs on board:', '\n', mites_on_board.to_string(max_rows=30))
 
 mites_ob_in_exons = (mites_on_board.merge(exons_el10, how='outer', on=['chr']).
-                     query('(start_te < start_ex & end_te > start_ex) | '
-                            '(start_te < end_ex & end_te > end_ex)').drop_duplicates().reset_index(drop=True))
+                     query('(start_te < start_ex & end_te > start_ex) | (start_te < end_ex & end_te > end_ex)').
+                     drop_duplicates().reset_index(drop=True))
 print('MITEs on board in exons:', '\n', mites_ob_in_exons.to_string(max_rows=30))
 # df['is_rich_method2'] = ['yes' if x >= 50 else 'no' for x in df['salary']]
 mites_on_board_exons = mites_on_board.merge(mites_ob_in_exons, how='outer')
@@ -190,4 +194,4 @@ te_type = mites_in_genes_te_types.pop('te_type')
 mites_in_genes_te_types.insert(44, te_type.name, te_type)
 print(mites_in_genes_te_types.to_string(max_rows=50))
 
-mites_in_genes_te_types.to_csv('../files/P1_all_results_in_one.csv', sep='\t', index=False)
+# mites_in_genes_te_types.to_csv('../files/P1_all_results_in_one.csv', sep='\t', index=False)
