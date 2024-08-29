@@ -50,7 +50,7 @@ print(bins_to_compare.memory_usage(deep=True).sum())
 
 samples = pd.read_csv('../files/P1_list_to_DE_20more_genes.csv', sep='\t')
 sets_list = (pd.read_csv('../files/P1_sets_test.csv', sep='\t').
-             sort_values(by=['set_no', 'unique_no']).drop(columns=['genes_count', 'set_no']))
+             sort_values(by=['set_no', 'unique_no']).drop(columns=['genes_count']))
 print(sets_list.to_string())
 
 mites_all = pd.read_csv('../files/P1_MITEs_with_bins_sets.csv', sep='\t')
@@ -162,7 +162,7 @@ exons_board_updown = (pd.concat([mites_in_genes_ex, mites_on_board_exons, mites_
 print('MITEs with <mite_loc>:', '\n' , exons_board_updown.to_string(max_rows=30))
 
 bins_genes_mites = (opt_bins_and_de.merge(exons_board_updown, how='outer',
-                                          on=['chr', 'start_gene', 'end_gene', 'gene_strand', 'unique_no', 'set_no', ]).
+                                          on=['chr', 'start_gene', 'end_gene', 'gene_strand', 'unique_no', 'set_no']).
                     reset_index(drop=True))
 print(bins_genes_mites.to_string(max_rows=200))
 
@@ -190,4 +190,4 @@ te_type = mites_in_genes_te_types.pop('te_type')
 mites_in_genes_te_types.insert(44, te_type.name, te_type)
 print(mites_in_genes_te_types.to_string(max_rows=50))
 
-# all_together.to_csv('../files/P1_alltogether.csv', sep='\t', index=False)
+mites_in_genes_te_types.to_csv('../files/P1_all_results_in_one.csv', sep='\t', index=False)
