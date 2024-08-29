@@ -42,7 +42,9 @@ def find_unique_no(sample_set):
     sample_set['unique_no'] = sample_set['unique_no'].str.replace('[', '').str.replace(']', '')
     sample_set['unique_no'] = sample_set['unique_no'].astype(int)
     print(sample_set.iloc[1, 3], '\n', type(sample_set.iloc[1, 3]), '\n', sample_set.to_string())
-    sample_set.to_csv('../files/P1_sets_test.csv', sep='\t', index=False)
+    sample_set['one_one'] = [repr(x) for x in sample_set['one_one']]
+    sample_set['zero_zero'] = [repr(x) for x in sample_set['zero_zero']]
+    # sample_set.to_csv('../files/P4_sets_test.csv', sep='\t', index=False)
     return sample_set
 
 
@@ -66,10 +68,8 @@ def all_genes_in_all_bins():
     bin_genes_count = all_genes_bins.pop('bin_genes_count')
     all_genes_bins.insert(4, bin_genes_count.name, bin_genes_count)
     all_genes_bins['bin_genes_count'] = all_genes_bins['bin_genes_count']
-
     print(all_genes_bins.to_string(max_rows=100))
 
-    all_genes_bins = pd.concat([all_genes_bins, sets_list], sort=False).reset_index(drop=True)
     # all_genes_bins.to_csv('../files/P4_all_EL10_genes_in_all_bins.csv', sep='\t', index=False)
     return all_genes_bins
 
