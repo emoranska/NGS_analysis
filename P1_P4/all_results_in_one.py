@@ -2,16 +2,34 @@ import pandas as pd
 import numpy as np
 from concat_bins_with_genes_and_rest import find_unique_no
 
-bins_and_de = (pd.read_csv('../files/P4_all_EL10_genes_in_all_bins_with_DE_and_kallisto.csv', sep='\t').
-               drop(columns=['start_gene', 'end_gene'])).rename(columns={'Start': 'start_gene', 'End': 'end_gene'})
-# print(bins_and_de.memory_usage(deep=True))
+bins_and_de = (pd.read_csv('../files/P1_all_EL10_genes_in_all_bins_with_DE_and_kallisto.csv', sep='\t'))
+# # print(bins_and_de.memory_usage(deep=True))
+
+# change gene localisation according to data from DE (Start, End)
+a = bins_and_de['start_gene']
+b = bins_and_de['GeneID']
+c = bins_and_de['Start']
+d = bins_and_de['end_gene']
+e = bins_and_de['End']
+
+cond_start_end = [pd.isnull(b), pd.notnull(b)]
+choices_start = [a, c]
+bins_and_de['start_test'] = np.select(cond_start_end, choices_start, default=0)
+choices_end = [d, e]
+bins_and_de['end_test'] = np.select(cond_start_end, choices_end, default=0)
+
+bins_and_de = (bins_and_de.drop(columns=['start_gene', 'end_gene', 'Start', 'End']).
+               rename(columns={'start_test': 'start_gene', 'end_test': 'end_gene'}))
+
 start_gene = bins_and_de.pop('start_gene')
 bins_and_de.insert(5, start_gene.name, start_gene)
+bins_and_de['start_gene'] = bins_and_de['start_gene'].astype(int)
 
 end_gene = bins_and_de.pop('end_gene')
 bins_and_de.insert(6, end_gene.name, end_gene)
+bins_and_de['end_gene'] = bins_and_de['end_gene'].astype(int)
 
-print(bins_and_de.to_string(max_rows=30))
+print("Bins and DE results:", '\n', bins_and_de.to_string(max_rows=50))
 
 bins_and_de_int = bins_and_de.select_dtypes(include=['int'])
 bins_conv_int = bins_and_de_int.apply(pd.to_numeric, downcast='unsigned')
@@ -49,13 +67,13 @@ print(bins_to_compare.to_string(max_rows=30))
 print(bins_to_compare.memory_usage(deep=True).sum())
 
 
-samples = pd.read_csv('../files/P4_list_to_DE_20more_genes.csv', sep='\t')
+samples = pd.read_csv('../files/P1_list_to_DE_20more_genes.csv', sep='\t')
 # sets_list = (pd.read_csv('../files/P1_sets_test.csv', sep='\t').
 #              sort_values(by=['set_no', 'unique_no']).drop(columns=['genes_count']))
-sets_list = find_unique_no(samples)
+sets_list = find_unique_no(samples).drop(columns=['genes_count'])
 print(sets_list.to_string())
 
-mites_all = pd.read_csv('../files/P4_MITEs_with_bins_sets.csv', sep='\t').drop(columns=['set_no'])
+mites_all = pd.read_csv('../files/P1_MITEs_with_bins_sets.csv', sep='\t').drop(columns=['set_no'])
 
 mites_all_int = mites_all.select_dtypes(include=['int'])
 mites_conv_int = mites_all_int.apply(pd.to_numeric, downcast='unsigned')
@@ -108,10 +126,10 @@ mites_in_exons = (mites_in_genes.merge(exons_el10, how='outer', on=['chr']).
 
 print('MITEs in exons:', '\n', mites_in_exons.to_string(max_rows=30))
 
-mites_in_genes_ex = mites_in_genes.merge(mites_in_exons, how='outer')
+mites_in_genes_ex = mites_in_genes.merge(mites_in_exons, how='outer').drop_duplicates()
 mites_in_genes_ex.loc[~np.isnan(mites_in_genes_ex['start_ex']), 'mite_loc'] = 'exon'
 # df.loc[df['salary'] > 50,'is_rich_method3'] = 'yes'
-print('MITEs in genes with exons checked:', '\n', mites_in_genes_ex.to_string())
+print('MITEs in genes with exons checked:', '\n', mites_in_genes_ex.to_string(max_rows=30))
 
 mites_on_board = (bins_to_compare.merge(mites_with_unique_no, how='outer', on=['chr', 'unique_no']).
                   query('(start_te < start_gene) & (end_te >= start_gene) | '
@@ -140,7 +158,8 @@ mites_on_board_exons['mite_loc'] = np.select(cond_board, choices, default=0)
 
 mite_loc = mites_on_board_exons.pop('mite_loc')
 mites_on_board_exons.insert(11, mite_loc.name, mite_loc)
-print(mites_on_board_exons.to_string())
+mites_on_board_exons = mites_on_board_exons.drop_duplicates().reset_index(drop=True)
+print('MITEs on board in exons checked:', '\n', mites_on_board_exons.to_string(max_rows=30))
 
 mites_updown = (bins_to_compare.merge(mites_with_unique_no, how='outer', on=['chr', 'unique_no']).
                 query('(start_te >= start_gene - 2000) & (end_te < start_gene) | (end_te <= end_gene + 2000) & '
@@ -153,7 +172,7 @@ sg = mites_updown['start_gene']
 strand = mites_updown['gene_strand']
 
 cond_updown = [((st.lt(sg) & strand.eq('+')) | (st.gt(sg) & strand.eq('-'))),
-                ((st.lt(sg) & strand.eq('-')) | (st.gt(sg) & strand.eq('+')))]
+               ((st.lt(sg) & strand.eq('-')) | (st.gt(sg) & strand.eq('+')))]
 
 choices_ud = ['upstream', 'downstream']
 mites_updown['mite_loc'] = np.select(cond_updown, choices_ud, default=0)
@@ -168,10 +187,10 @@ bins_genes_mites = (opt_bins_and_de.merge(exons_board_updown, how='outer',
                     reset_index(drop=True))
 print(bins_genes_mites.to_string(max_rows=200))
 
-te_ref = pd.read_csv('../files/P4_ref_matrix_sort_2000_all.csv', sep='\t')
+te_ref = pd.read_csv('../files/P1_ref_matrix_sort_2000_all.csv', sep='\t')
 te_ref = te_ref.drop(columns=te_ref.columns[-12:], axis=1)
 print(te_ref.to_string(max_rows=30))
-te_nonref = pd.read_csv('../files/P4_nonref_matrix_all.csv', sep='\t')
+te_nonref = pd.read_csv('../files/P1_nonref_matrix_all.csv', sep='\t')
 te_nonref = te_nonref.drop(columns=te_nonref.columns[-12:], axis=1)
 print(te_nonref.to_string(max_rows=30))
 
@@ -190,6 +209,6 @@ mites_in_genes_te_types = bins_genes_mites.merge(type_checked, how='outer')
 
 te_type = mites_in_genes_te_types.pop('te_type')
 mites_in_genes_te_types.insert(44, te_type.name, te_type)
-print(mites_in_genes_te_types.to_string(max_rows=50))
+print(mites_in_genes_te_types.to_string(max_rows=300))
 
-mites_in_genes_te_types.to_csv('../files/P4_all_results_in_one.csv', sep='\t', index=False)
+mites_in_genes_te_types.to_csv('../files/P1_all_results_in_one.csv', sep='\t', index=False)
