@@ -211,4 +211,4 @@ te_type = mites_in_genes_te_types.pop('te_type')
 mites_in_genes_te_types.insert(44, te_type.name, te_type)
 print(mites_in_genes_te_types.to_string(max_rows=300))
 
-mites_in_genes_te_types.to_csv('../files/P1_all_results_in_one.csv', sep='\t', index=False)
+# mites_in_genes_te_types.to_csv('../files/P1_all_results_in_one.csv', sep='\t', index=False)

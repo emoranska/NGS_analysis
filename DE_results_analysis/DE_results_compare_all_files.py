@@ -1,14 +1,17 @@
 import pandas as pd
 import ast
 import time
+import os
 from pathlib import Path
-import numpy as np
+from P1_P4.concat_bins_with_genes_and_rest import all_genes_in_all_bins
 
 start_time = time.time()
 
 # genes_in_bins = pd.read_csv('../files/P1_list_genes_in_rest_bins_to_add.csv', sep='\t')
 
-genes_in_bins = pd.read_csv('../files/P4_all_EL10_genes_in_all_bins.csv', sep='\t')
+# genes_in_bins = pd.read_csv('../files/P4_all_EL10_genes_in_all_bins.csv', sep='\t')
+genes_in_bins = all_genes_in_all_bins()
+print('Genes in bins', '\n', genes_in_bins.to_string(max_rows=30))
 
 genes_legend = pd.read_csv('../../../Pobrane/genes.csv', sep=',').rename(columns={'Gene': 'GeneID'})
 
@@ -20,6 +23,7 @@ input_folder = Path("~/Pobrane/Emi_P4")
 
 def de_results_with_genes_in_bins():
     final_df = pd.DataFrame()
+    # print(len(os.listdir(input_folder)))
 
     # set the range according to numer of output files with DE results
     for idx in range(0, 92):
@@ -93,7 +97,7 @@ de_df.insert(14, de_updown.name, de_updown)
 de_df['de_results'] = de_df['de_results']
 
 # print(de_df.to_string(max_rows=200))
-de_df.to_csv('../files/P4_all_EL10_genes_in_all_bins_with_DE_results.csv', sep='\t', index=False)
+# de_df.to_csv('../files/P4_all_EL10_genes_in_all_bins_with_DE_results.csv', sep='\t', index=False)
 
 kallisto = pd.read_csv('../files/kallisto_P4.csv', sep='\t')
 
@@ -135,7 +139,7 @@ print(k_all.to_string(max_rows=30))
 
 out_with_kallisto = pd.concat([de_df, k_all], axis=1)
 print(out_with_kallisto.to_string(max_rows=200))
-out_with_kallisto.to_csv('../files/P4_all_EL10_genes_in_all_bins_with_DE_and_kallisto.csv', sep='\t', index=False)
+# out_with_kallisto.to_csv('../files/P4_all_EL10_genes_in_all_bins_with_DE_and_kallisto.csv', sep='\t', index=False)
 
 
 def xloc_checking():
