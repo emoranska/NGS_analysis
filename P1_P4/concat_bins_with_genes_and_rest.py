@@ -1,9 +1,10 @@
 import pandas as pd
+import numpy as np
 import ast
 
-genes_bins = pd.read_csv('../files/P4_list_genes_in_homozyg_bins.csv', sep='\t')
-genes_bins_rest = pd.read_csv('../files/P4_list_genes_in_rest_bins_to_add.csv', sep='\t')
-sets_list = pd.read_csv('../files/P4_list_to_DE_20more_genes.csv', sep='\t')
+genes_bins = pd.read_csv('../files/P1_list_genes_in_homozyg_bins.csv', sep='\t')
+genes_bins_rest = pd.read_csv('../files/P1_list_genes_in_rest_bins_to_add.csv', sep='\t')
+sets_list = pd.read_csv('../files/P1_list_to_DE_20more_genes.csv', sep='\t')
 
 
 def concat_bins_and_rest():
@@ -11,29 +12,61 @@ def concat_bins_and_rest():
     genes_bins['bin_length'] = genes_bins['end_bin'] - genes_bins['start_bin']
     col = genes_bins.pop('bin_length')
     genes_bins.insert(3, col.name, col)
-    print(genes_bins.to_string(max_rows=30))
+    # print(genes_bins.to_string(max_rows=30))
 
     genes_bins_rest['bin_length'] = genes_bins_rest['end_bin'] - genes_bins_rest['start_bin']
     col = genes_bins_rest.pop('bin_length')
     genes_bins_rest.insert(3, col.name, col)
-    print(genes_bins_rest.to_string(max_rows=30))
+    # print(genes_bins_rest.to_string(max_rows=30))
 
     # create df for all bins with correct bins localisation (according to rest bins - longer) and remove redundant
     # records
     all_genes_bins = ((pd.concat([genes_bins, genes_bins_rest], ignore_index=True).sort_values(by=['chr', 'start_bin']).
                       drop_duplicates(subset=['chr', 'start_gene', 'end_gene', 'gene_name', 'unique_no'], keep='last')).
                       reset_index(drop=True))
-    print(all_genes_bins.to_string(max_rows=100))
+    # print(all_genes_bins.to_string(max_rows=100))
     return all_genes_bins
 
 
 genes_count = concat_bins_and_rest().drop_duplicates(subset=['gene_name'])
 print(len(genes_count))
 
+# to CHECK!!!
+
+# def alternative_to_literal_eval(str_val):
+#     if pd.isna(str_val):  # return NaN if value is NaN
+#         return np.nan
+#     # Remove the square brackets, split on ',' and strip possible
+#     # whitespaces between elements
+#     # vals = [v.strip() for v in str_val.strip('[]').split(',')]
+#     str_val = str_val.replace('[', '')
+#     str_val = str_val.replace(']', '')
+#
+#     # remove duplicates keeping the original order
+#     print(list(dict.fromkeys(str_val)))
+#     return list(dict.fromkeys(str_val))
+#
+#     # print(vals)
+#     # return list(vals)
+#
+#
+# line = sets_list.loc[1, 'one_one']
+# print(type(line), line)
+#
+# line = line.replace('[', '')
+# line = line.replace(']', '')
+# print(line)
+# # sets_list['one_one'] = sets_list['one_one'].apply(alternative_to_literal_eval)
+
 
 def find_unique_no(sample_set):
+    print('Before:', '\n', sample_set.to_string())
     sample_set['one_one'] = sample_set['one_one'].apply(ast.literal_eval)
     sample_set['zero_zero'] = sample_set['zero_zero'].apply(ast.literal_eval)
+
+    # sample_set['one_one'] = sample_set['one_one'].apply(alternative_to_literal_eval)
+    # sample_set['zero_zero'] = sample_set['zero_zero'].apply(alternative_to_literal_eval)
+    print('After:', '\n', sample_set.to_string())
 
     # create list of samples to DE with unique_no in separated rows --> to be able to find set_no for every unique_no
     sample_set['df_unique_index'] = sample_set['df_unique_index'].str.split(',')
@@ -42,8 +75,9 @@ def find_unique_no(sample_set):
     sample_set['unique_no'] = sample_set['unique_no'].str.replace('[', '').str.replace(']', '')
     sample_set['unique_no'] = sample_set['unique_no'].astype(int)
     print(sample_set.iloc[1, 3], '\n', type(sample_set.iloc[1, 3]), '\n', sample_set.to_string())
-    sample_set['one_one'] = [repr(x) for x in sample_set['one_one']]
-    sample_set['zero_zero'] = [repr(x) for x in sample_set['zero_zero']]
+    # sample_set['one_one'] = [repr(x) for x in sample_set['one_one']]
+    # sample_set['zero_zero'] = [repr(x) for x in sample_set['zero_zero']]
+    # print('Final:', '\n', sample_set.to_string())
     # sample_set.to_csv('../files/P4_sets_test.csv', sep='\t', index=False)
     return sample_set
 
