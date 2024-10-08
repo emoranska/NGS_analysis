@@ -149,17 +149,23 @@ y = mites_on_board_exons['start_te']
 z = mites_on_board_exons['gene_strand']
 g = mites_on_board_exons['start_gene']
 
-cond_board = [pd.isnull(x) & ((y.lt(g) & z.eq('+')) | (y.gt(g) & z.eq('-'))),
-              pd.isnull(x) & ((y.lt(g) & z.eq('-')) | (y.gt(g) & z.eq('+'))),
-              pd.notnull(x) & ((y.lt(x) & z.eq('+')) | (y.gt(x) & z.eq('-'))),
-              pd.notnull(x) & ((y.lt(x) & z.eq('-')) | (y.gt(x) & z.eq('+')))]
-choices = ['board_up', 'board_down', 'board_exon_up', 'board_exon_down']
-mites_on_board_exons['mite_loc'] = np.select(cond_board, choices, default=0)
+# cond_board = [pd.isnull(x) & ((y.lt(g) & z.eq('+')) | (y.gt(g) & z.eq('-'))),
+#               pd.isnull(x) & ((y.lt(g) & z.eq('-')) | (y.gt(g) & z.eq('+'))),
+#               pd.notnull(x) & ((y.lt(x) & z.eq('+')) | (y.gt(x) & z.eq('-'))),
+#               pd.notnull(x) & ((y.lt(x) & z.eq('-')) | (y.gt(x) & z.eq('+')))]
+# choices = ['board_up', 'board_down', 'board_exon_up', 'board_exon_down']
+# mites_on_board_exons['mite_loc'] = np.select(cond_board, choices, default=0)
+
+cond_utr = [((y.lt(g) & z.eq('+')) | (y.gt(g) & z.eq('-'))),
+            ((y.lt(g) & z.eq('-')) | (y.gt(g) & z.eq('+')))]
+choices_utr = ['5_UTR', '3_UTR']
+# mites_on_board_exons['utr_check'] = np.select(cond_utr, choices_utr, default=0)
+mites_on_board_exons['mite_loc'] = np.select(cond_utr, choices_utr, default=0)
 
 mite_loc = mites_on_board_exons.pop('mite_loc')
 mites_on_board_exons.insert(11, mite_loc.name, mite_loc)
 mites_on_board_exons = mites_on_board_exons.drop_duplicates().reset_index(drop=True)
-print('MITEs on board in exons checked:', '\n', mites_on_board_exons.to_string(max_rows=30))
+print('MITEs on board in exons checked:', '\n', mites_on_board_exons.to_string())
 
 mites_updown = (bins_to_compare.merge(mites_with_unique_no, how='outer', on=['chr', 'unique_no']).
                 query('(start_te >= start_gene - 2000) & (end_te < start_gene) | (end_te <= end_gene + 2000) & '
@@ -180,6 +186,7 @@ print(mites_updown.to_string(max_rows=30))
 
 exons_board_updown = (pd.concat([mites_in_genes_ex, mites_on_board_exons, mites_updown]).
                       sort_values(by=['chr', 'start_gene', 'start_te']).reset_index(drop=True))
+
 print('MITEs with <mite_loc>:', '\n', exons_board_updown.to_string(max_rows=30))
 
 bins_genes_mites = (opt_bins_and_de.merge(exons_board_updown, how='outer',
@@ -211,4 +218,4 @@ te_type = mites_in_genes_te_types.pop('te_type')
 mites_in_genes_te_types.insert(44, te_type.name, te_type)
 print(mites_in_genes_te_types.to_string(max_rows=300))
 
-mites_in_genes_te_types.to_csv('../files/P4_all_results_in_one.csv', sep='\t', index=False)
+mites_in_genes_te_types.to_csv('../files/P4_all_results_in_one_utr.csv', sep='\t', index=False)
