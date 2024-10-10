@@ -124,8 +124,11 @@ print('MITEs in genes:', '\n', mites_in_genes.to_string(max_rows=30))
 exons_el10 = pd.read_csv('../files/EL10_exons_bed.csv', sep='\t').drop(columns=['gene_name', 'gene_strand'])
 mites_in_exons = (mites_in_genes.merge(exons_el10, how='outer', on=['chr']).
                   query('(start_te >= start_ex & end_te <= end_ex)').drop_duplicates().reset_index(drop=True))
-
 print('MITEs in exons:', '\n', mites_in_exons.to_string(max_rows=30))
+
+mites_in_genes_ex = mites_in_genes.merge(mites_in_exons, how='outer').drop_duplicates()
+mites_in_genes_ex.loc[~np.isnan(mites_in_genes_ex['start_ex']), 'mite_loc'] = 'exon'
+print('MITEs in genes with exons checked:', '\n', mites_in_genes_ex.to_string(max_rows=100))
 
 # check MITEs in cds
 cds_el10 = pd.read_csv('../files/EL10_CDS_bed.csv', sep='\t').drop(columns=['gene_name', 'gene_strand'])
@@ -134,10 +137,16 @@ mites_in_cds = (mites_in_exons.merge(cds_el10, how='outer', on=['chr']).
 mites_in_cds['mite_loc'] = 'cds'
 print('MITEs in cds:', '\n', mites_in_cds.to_string(max_rows=30))
 
-mites_in_genes_ex = mites_in_genes.merge(mites_in_exons, how='outer').drop_duplicates()
-mites_in_genes_ex.loc[~np.isnan(mites_in_genes_ex['start_ex']), 'mite_loc'] = 'exon'
-# df.loc[df['salary'] > 50,'is_rich_method3'] = 'yes'
-print('MITEs in genes with exons checked:', '\n', mites_in_genes_ex.to_string(max_rows=30))
+mites_in_genes_ex_cds = (mites_in_genes_ex.merge(mites_in_cds, how='outer').
+                         sort_values(by=['chr', 'start_gene', 'start_te', 'mite_loc']).reset_index(drop=True))
+                         # drop_duplicates(subset=['chr', 'start_gene', 'end_gene', 'gene_strand', 'unique_no', 'family', 'start_te',
+                         #                         'start_ex', 'end_ex'], keep='first')).reset_index(drop=True)
+print('MITEs in genes with exons and cds checked:', '\n', mites_in_genes_ex_cds.to_string(max_rows=500))
+
+duplicated = mites_in_genes_ex_cds[mites_in_genes_ex_cds.duplicated(['chr', 'start_gene', 'end_gene', 'gene_strand',
+                                                                      'unique_no', 'family', 'start_te',
+                                                                      'start_ex', 'end_ex'], keep=False)]
+print('Duplicated:', '\n', duplicated.to_string())
 
 mites_on_board = (bins_to_compare.merge(mites_with_unique_no, how='outer', on=['chr', 'unique_no']).
                   query('(start_te < start_gene) & (end_te >= start_gene) | '
@@ -149,8 +158,9 @@ mites_ob_in_exons = (mites_on_board.merge(exons_el10, how='outer', on=['chr']).
                      query('(start_te < start_ex & end_te > start_ex) | (start_te < end_ex & end_te > end_ex)').
                      drop_duplicates().reset_index(drop=True))
 print('MITEs on board in exons:', '\n', mites_ob_in_exons.to_string(max_rows=30))
-# df['is_rich_method2'] = ['yes' if x >= 50 else 'no' for x in df['salary']]
+
 mites_on_board_exons = mites_on_board.merge(mites_ob_in_exons, how='outer')
+print('MITEs on board in genes and exons:', '\n', mites_on_board_exons)
 
 x = mites_on_board_exons['start_ex']
 y = mites_on_board_exons['start_te']
@@ -192,7 +202,7 @@ choices_ud = ['upstream', 'downstream']
 mites_updown['mite_loc'] = np.select(cond_updown, choices_ud, default=0)
 print(mites_updown.to_string(max_rows=30))
 
-exons_board_updown = (pd.concat([mites_in_genes_ex, mites_on_board_exons, mites_updown]).
+exons_board_updown = (pd.concat([mites_in_genes_ex_cds, mites_on_board_exons, mites_updown]).
                       sort_values(by=['chr', 'start_gene', 'start_te']).reset_index(drop=True))
 
 print('MITEs with <mite_loc>:', '\n', exons_board_updown.to_string(max_rows=30))
