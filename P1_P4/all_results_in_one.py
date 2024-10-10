@@ -137,35 +137,51 @@ mites_in_cds = (mites_in_exons.merge(cds_el10, how='outer', on=['chr']).
 mites_in_cds['mite_loc'] = 'cds'
 print('MITEs in cds:', '\n', mites_in_cds.to_string(max_rows=30))
 
-mites_in_genes_ex_cds = (mites_in_genes_ex.merge(mites_in_cds, how='outer').
-                         sort_values(by=['chr', 'start_gene', 'start_te', 'mite_loc']).reset_index(drop=True))
-                         # drop_duplicates(subset=['chr', 'start_gene', 'end_gene', 'gene_strand', 'unique_no', 'family', 'start_te',
-                         #                         'start_ex', 'end_ex'], keep='first')).reset_index(drop=True)
+mites_in_genes_ex_cds = ((mites_in_genes_ex.merge(mites_in_cds, how='outer').
+                         sort_values(by=['chr', 'start_gene', 'start_te', 'mite_loc']).
+                         drop_duplicates(subset=['chr', 'start_gene', 'end_gene', 'gene_strand', 'unique_no', 'family',
+                                                 'start_te', 'start_ex', 'end_ex'], keep='first')).
+                         reset_index(drop=True))
 print('MITEs in genes with exons and cds checked:', '\n', mites_in_genes_ex_cds.to_string(max_rows=500))
 
-duplicated = mites_in_genes_ex_cds[mites_in_genes_ex_cds.duplicated(['chr', 'start_gene', 'end_gene', 'gene_strand',
-                                                                      'unique_no', 'family', 'start_te',
-                                                                      'start_ex', 'end_ex'], keep=False)]
-print('Duplicated:', '\n', duplicated.to_string())
+# duplicated = mites_in_genes_ex_cds[mites_in_genes_ex_cds.duplicated(['chr', 'start_gene', 'end_gene', 'gene_strand',
+#                                                                       'unique_no', 'family', 'start_te',
+#                                                                       'start_ex', 'end_ex'], keep=False)]
+# print('Duplicated:', '\n', duplicated.to_string())
 
-mites_on_board = (bins_to_compare.merge(mites_with_unique_no, how='outer', on=['chr', 'unique_no']).
-                  query('(start_te < start_gene) & (end_te >= start_gene) | '
+mites_on_board_gene = (bins_to_compare.merge(mites_with_unique_no, how='outer', on=['chr', 'unique_no']).
+                       query('(start_te < start_gene) & (end_te >= start_gene) | '
                         '(end_te > end_gene) & (start_te <= end_gene)').
-                  reset_index(drop=True))
-print('MITEs on board:', '\n', mites_on_board.to_string(max_rows=30))
+                       reset_index(drop=True))
+print('MITEs on genes board:', '\n', mites_on_board_gene.to_string(max_rows=30))
 
-mites_ob_in_exons = (mites_on_board.merge(exons_el10, how='outer', on=['chr']).
-                     query('(start_te < start_ex & end_te > start_ex) | (start_te < end_ex & end_te > end_ex)').
+mites_ob_gene_in_exons = (mites_on_board_gene.merge(exons_el10, how='outer', on=['chr']).
+                     query('(start_te < start_ex & end_te >= start_ex) | (start_te < end_ex & end_te >= end_ex)').
+                     drop_duplicates().reset_index(drop=True))
+print('MITEs on genes board in exons:', '\n', mites_ob_gene_in_exons.to_string(max_rows=50))
+
+
+mites_ob_in_exons = (mites_in_genes.merge(exons_el10, how='outer', on=['chr']).
+                     query('(start_te < start_ex & end_te >= start_ex) | (start_te < end_ex & end_te >= end_ex)').
                      drop_duplicates().reset_index(drop=True))
 print('MITEs on board in exons:', '\n', mites_ob_in_exons.to_string(max_rows=30))
 
-mites_on_board_exons = mites_on_board.merge(mites_ob_in_exons, how='outer')
-print('MITEs on board in genes and exons:', '\n', mites_on_board_exons)
+mites_on_board_genes_exons = (mites_ob_gene_in_exons.merge(mites_ob_in_exons, how='outer').
+                              sort_values(by=['chr', 'start_gene', 'start_te']).reset_index(drop=True))
+print('MITEs on board in genes and exons:', '\n', mites_on_board_genes_exons.to_string(max_rows=30))
 
-x = mites_on_board_exons['start_ex']
-y = mites_on_board_exons['start_te']
-z = mites_on_board_exons['gene_strand']
-g = mites_on_board_exons['start_gene']
+mites_on_board_cds = (mites_on_board_genes_exons.merge(cds_el10, how='outer', on=['chr']).
+                      query('(start_te < start_cds & end_te >= start_cds) | (start_te < end_cds & end_te >= end_cds)').
+                      drop_duplicates().reset_index(drop=True))
+print('MITEs on board in cds:', '\n', mites_on_board_cds.to_string(max_rows=30))
+
+mites_on_board_genes_exons_cds = mites_on_board_genes_exons.merge(mites_on_board_cds, how='outer').reset_index(drop=True)
+print('MITEs on board in genes, exons and cds:', '\n', mites_on_board_genes_exons_cds.to_string(max_rows=50))
+
+x = mites_on_board_genes_exons_cds['start_ex']
+y = mites_on_board_genes_exons_cds['start_te']
+z = mites_on_board_genes_exons_cds['gene_strand']
+g = mites_on_board_genes_exons_cds['start_gene']
 
 # cond_board = [pd.isnull(x) & ((y.lt(g) & z.eq('+')) | (y.gt(g) & z.eq('-'))),
 #               pd.isnull(x) & ((y.lt(g) & z.eq('-')) | (y.gt(g) & z.eq('+'))),
@@ -174,16 +190,16 @@ g = mites_on_board_exons['start_gene']
 # choices = ['board_up', 'board_down', 'board_exon_up', 'board_exon_down']
 # mites_on_board_exons['mite_loc'] = np.select(cond_board, choices, default=0)
 
-cond_utr = [((y.lt(g) & z.eq('+')) | (y.gt(g) & z.eq('-'))),
-            ((y.lt(g) & z.eq('-')) | (y.gt(g) & z.eq('+')))]
+cond_utr = [((y.lt(x) & z.eq('+')) | (y.gt(x) & z.eq('-'))),
+            ((y.lt(x) & z.eq('-')) | (y.gt(x) & z.eq('+')))]
 choices_utr = ['5_UTR', '3_UTR']
 # mites_on_board_exons['utr_check'] = np.select(cond_utr, choices_utr, default=0)
-mites_on_board_exons['mite_loc'] = np.select(cond_utr, choices_utr, default=0)
+mites_on_board_genes_exons_cds['mite_loc'] = np.select(cond_utr, choices_utr, default=0)
 
-mite_loc = mites_on_board_exons.pop('mite_loc')
-mites_on_board_exons.insert(11, mite_loc.name, mite_loc)
-mites_on_board_exons = mites_on_board_exons.drop_duplicates().reset_index(drop=True)
-print('MITEs on board in exons checked:', '\n', mites_on_board_exons.to_string())
+mite_loc = mites_on_board_genes_exons_cds.pop('mite_loc')
+mites_on_board_genes_exons_cds.insert(11, mite_loc.name, mite_loc)
+mites_on_board_genes_exons_cds = mites_on_board_genes_exons_cds.drop_duplicates().reset_index(drop=True)
+print('MITEs on board in genes, exons and checked:', '\n', mites_on_board_genes_exons_cds.to_string())
 
 mites_updown = (bins_to_compare.merge(mites_with_unique_no, how='outer', on=['chr', 'unique_no']).
                 query('(start_te >= start_gene - 2000) & (end_te < start_gene) | (end_te <= end_gene + 2000) & '
@@ -202,10 +218,10 @@ choices_ud = ['upstream', 'downstream']
 mites_updown['mite_loc'] = np.select(cond_updown, choices_ud, default=0)
 print(mites_updown.to_string(max_rows=30))
 
-exons_board_updown = (pd.concat([mites_in_genes_ex_cds, mites_on_board_exons, mites_updown]).
+exons_board_updown = (pd.concat([mites_in_genes_ex_cds, mites_on_board_genes_exons_cds, mites_updown]).
                       sort_values(by=['chr', 'start_gene', 'start_te']).reset_index(drop=True))
-
-print('MITEs with <mite_loc>:', '\n', exons_board_updown.to_string(max_rows=30))
+# change 'mite_loc' for 'exon' into '5_UTR' orr '3_UTR'
+print('MITEs with <mite_loc>:', '\n', exons_board_updown.to_string(max_rows=100))
 
 bins_genes_mites = (opt_bins_and_de.merge(exons_board_updown, how='outer',
                                           on=['chr', 'start_gene', 'end_gene', 'gene_strand', 'unique_no', 'set_no']).
