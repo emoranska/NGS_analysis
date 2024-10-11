@@ -131,8 +131,8 @@ se = mites_in_exons['start_ex']
 ste = mites_in_exons['start_te']
 gs = mites_in_exons['gene_strand']
 
-cond_utr_exons = [((ste.lt(se) & gs.eq('+') & ml.eq('exon')) | (ste.gt(se) & gs.eq('-')) & ml.eq('exon')),
-                  ((ste.lt(se) & gs.eq('-') & ml.eq('exon')) | (ste.gt(se) & gs.eq('+') & ml.eq('exon')))]
+cond_utr_exons = [((ste.le(se) & gs.eq('+') & ml.eq('exon')) | (ste.ge(se) & gs.eq('-')) & ml.eq('exon')),
+                  ((ste.le(se) & gs.eq('-') & ml.eq('exon')) | (ste.ge(se) & gs.eq('+') & ml.eq('exon')))]
 choices_utr = ['5_UTR', '3_UTR']
 mites_in_exons['mite_loc'] = np.select(cond_utr_exons, choices_utr, default='exon')
 
