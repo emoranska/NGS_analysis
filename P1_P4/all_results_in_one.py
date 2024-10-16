@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from concat_bins_with_genes_and_rest import find_unique_no
+# from concat_bins_with_genes_and_rest import find_unique_no
 
 bins_and_de = (pd.read_csv('../files/P4_all_EL10_genes_in_all_bins_with_DE_and_kallisto_tpm.csv', sep='\t'))
 # # print(bins_and_de.memory_usage(deep=True))
@@ -66,6 +66,13 @@ bins_to_compare = opt_bins_and_de[['chr', 'start_gene', 'end_gene', 'gene_name',
 print(bins_to_compare.to_string(max_rows=30))
 print(bins_to_compare.memory_usage(deep=True).sum())
 
+del bins_and_de
+del bins_and_de_obj
+del bins_conv_obj
+del bins_and_de_float
+del bins_conv_float
+del bins_and_de_int
+del bins_conv_int
 
 samples = pd.read_csv('../files/P4_list_to_DE_20more_genes.csv', sep='\t')
 sets_list = (pd.read_csv('../files/P4_sets_test.csv', sep='\t').
@@ -106,12 +113,16 @@ print(mites_conv_obj.memory_usage(deep=True).sum())
 print(opt_mites_all.to_string(max_rows=30))
 print(mites_conv_obj.to_string(max_rows=30))
 
+del mites_all_obj, mites_conv_obj, mites_all_float, mites_conv_float, mites_all_int, mites_conv_int
+
 mites_with_unique_no = (((opt_mites_all.merge(sets_list, how='cross').
                         query('((te_ins == one_one) & (no_te_ins == zero_zero)) | '
                               '((te_ins == zero_zero) & (no_te_ins == one_one))')).
                         drop(columns=['one_one', 'zero_zero']).rename(columns={'start': 'start_te', 'end': 'end_te'})).
                         reset_index(drop=True))
 
+# opt_mites_all = None
+del opt_mites_all
 print('MITEs with unique_no:', '\n', mites_with_unique_no.to_string(max_rows=30))
 
 # check MITEs in genes and on board's genes
@@ -124,7 +135,45 @@ print('MITEs in genes and on board genes:', '\n', mites_in_genes.to_string(max_r
 
 # check MITEs in exons and on board's exons
 exons_el10 = pd.read_csv('../files/EL10_exons_bed.csv', sep='\t').drop(columns=['gene_name', 'gene_strand'])
-mites_in_exons = (mites_in_genes.merge(exons_el10, how='outer', on=['chr']).
+print(exons_el10.memory_usage(deep=True).sum())
+
+opt_exons_el10 = exons_el10.copy()
+
+exons_el10_obj = exons_el10.select_dtypes(include=['object']).copy()
+print(exons_el10_obj.memory_usage(deep=True).sum())
+print(exons_el10_obj)
+
+exons_el10_conv_obj = pd.DataFrame()
+for col in exons_el10_obj.columns:
+    num_unique_values = len(exons_el10_obj[col].unique())
+    num_total_values = len(exons_el10_obj[col])
+    if num_unique_values / num_total_values < 0.5:
+        exons_el10_conv_obj.loc[:, col] = exons_el10_obj[col].astype('category')
+    else:
+        exons_el10_conv_obj.loc[:, col] = exons_el10_obj[col]
+
+opt_exons_el10[exons_el10_conv_obj.columns] = exons_el10_conv_obj
+print(opt_exons_el10.memory_usage(deep=True).sum())
+print(exons_el10_conv_obj.memory_usage(deep=True).sum())
+print(exons_el10_conv_obj)
+
+# exons_el10_float = exons_el10.select_dtypes(include=['float'])
+# print(exons_el10_float.memory_usage(deep=True).sum())
+# print(exons_el10_float)
+
+exons_el10_int = exons_el10.select_dtypes(include=['int'])
+print(exons_el10_int.memory_usage(deep=True).sum())
+print(exons_el10_int)
+
+exons_el10_conv_int = exons_el10_int.apply(pd.to_numeric, downcast='unsigned')
+print(exons_el10_conv_int.memory_usage(deep=True).sum())
+
+opt_exons_el10[exons_el10_conv_int.columns] = exons_el10_conv_int
+print(opt_exons_el10.memory_usage(deep=True).sum())
+
+del exons_el10, exons_el10_obj, exons_el10_conv_obj, exons_el10_int, exons_el10_conv_int
+
+mites_in_exons = (mites_in_genes.merge(opt_exons_el10, how='outer', on=['chr']).
                   query('(start_te >= start_ex & end_te <= end_ex) | '
                         '(start_te < start_ex & end_te >= start_ex) | '
                         '(start_te < end_ex & end_te >= end_ex)').drop_duplicates().reset_index(drop=True))
@@ -262,11 +311,15 @@ mites_ob_with_cds_check = mites_ob_with_cds_check.drop_duplicates(
             'end_ex']).reset_index(drop=True)
 print('MITEs on board in genes, exons and checked:', '\n', mites_ob_with_cds_check.to_string())
 '''
+
 mites_updown = (bins_to_compare.merge(mites_with_unique_no, how='outer', on=['chr', 'unique_no']).
-                query('(start_te >= start_gene - 2000) & (end_te < start_gene) | (end_te <= end_gene + 2000) & '
-                      '(start_te > end_gene)').
+                query('((start_te >= start_gene - 2000) & (end_te < start_gene)) | ((end_te <= end_gene + 2000) & '
+                      '(start_te > end_gene))').
                 reset_index(drop=True))
 print('MITEs updown:', '\n', mites_updown.to_string(max_rows=30))
+
+# mites_with_unique_no = None
+del mites_with_unique_no
 
 st = mites_updown['start_te']
 et = mites_updown['end_te']
@@ -274,12 +327,18 @@ sg = mites_updown['start_gene']
 eg = mites_updown['end_gene']
 strand = mites_updown['gene_strand']
 
-cond_updown = [((st.lt(sg) & strand.eq('+')) | (st.gt(sg) & strand.eq('-'))),
-               ((st.lt(sg) & strand.eq('-')) | (st.gt(sg) & strand.eq('+')))]
+cond_updown = [((et.lt(sg) & strand.eq('+')) | (st.gt(sg) & strand.eq('-'))),
+               ((st.lt(sg) & strand.eq('-')) | (st.gt(eg) & strand.eq('+')))]
 
 choices_ud = ['upstream', 'downstream']
 mites_updown['mite_loc'] = np.select(cond_updown, choices_ud, default=0)
 print(mites_updown.to_string(max_rows=30))
+
+upstream_check = mites_updown[mites_updown['mite_loc'].eq('upstream')]
+print('MITEs upstream check:', '\n', upstream_check.reset_index(drop=True).to_string(max_rows=50))
+
+downstream_check = mites_updown[mites_updown['mite_loc'].eq('downstream')]
+print('MITEs downstream check:', '\n', downstream_check.reset_index(drop=True).to_string(max_rows=50))
 
 exons_board_updown = (pd.concat([mites_in_genes_ex_cds_copy, mites_updown]).
                       sort_values(by=['chr', 'start_gene', 'start_te', 'mite_loc']).
@@ -320,3 +379,4 @@ mites_in_genes_te_types.insert(45, te_type.name, te_type)
 print(mites_in_genes_te_types.to_string(max_rows=300))
 
 # mites_in_genes_te_types.to_csv('../files/P4_all_results_in_one_utr.csv', sep='\t', index=False)
+
