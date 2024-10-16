@@ -4,7 +4,7 @@ import ast
 
 genes_bins = pd.read_csv('../files/P1_list_genes_in_homozyg_bins.csv', sep='\t')
 genes_bins_rest = pd.read_csv('../files/P1_list_genes_in_rest_bins_to_add.csv', sep='\t')
-sets_list = pd.read_csv('../files/P1_list_to_DE_20more_genes.csv', sep='\t')
+sets_list = pd.read_csv('../files/P4_list_to_DE_20more_genes.csv', sep='\t')
 
 
 def concat_bins_and_rest():
@@ -78,7 +78,7 @@ def find_unique_no(sample_set):
     # sample_set['one_one'] = [repr(x) for x in sample_set['one_one']]
     # sample_set['zero_zero'] = [repr(x) for x in sample_set['zero_zero']]
     # print('Final:', '\n', sample_set.to_string())
-    # sample_set.to_csv('../files/P1_sets_test.csv', sep='\t', index=False)
+    # sample_set.to_csv('../files/P4_sets_test.csv', sep='\t', index=False)
     return sample_set
 
 

@@ -4,8 +4,8 @@ import ast
 
 start_time = time.time()
 
-samples = pd.read_csv('../files/P1_list_to_DE_20more_genes.csv', sep='\t')
-te_all = pd.read_csv('../files/P1_matrix_all.csv', sep='\t')
+samples = pd.read_csv('../files/P4_list_to_DE_20more_genes.csv', sep='\t')
+te_all = pd.read_csv('../files/P4_matrix_all.csv', sep='\t')
 
 
 def te_filter(sample_sets, te_matrix):
@@ -17,8 +17,8 @@ def te_filter(sample_sets, te_matrix):
     te_matrix['start'] = te_matrix['start'].astype(int)
     te_matrix['end'] = te_matrix['end'].astype(int)
 
-    cols = te_matrix.filter(like='P1-').columns
-    # cols = te_matrix.filter(like='P4-').columns
+    # cols = te_matrix.filter(like='P1-').columns
+    cols = te_matrix.filter(like='P4-').columns
     sep = ','
 
     # create column with list of samples with homozygous MITE insertions, interpreted as frequency > 0.7
@@ -83,7 +83,7 @@ def te_filter(sample_sets, te_matrix):
                                                       'one_one_no_ins', 'zero_zero_no_ins']).rename
                            (columns={'ins': 'te_ins', 'no_ins': 'no_te_ins'}))
     print(mites_in_bins_final.to_string(max_rows=50))
-    # mites_in_bins_final.to_csv('../files/P1_MITEs_with_bins_sets.csv', sep='\t', index=False)
+    mites_in_bins_final.to_csv('../files/P4_MITEs_with_bins_sets.csv', sep='\t', index=False)
     return mites_in_bins_final
 
 
