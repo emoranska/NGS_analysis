@@ -135,13 +135,13 @@ print('MITEs in genes and on board genes:', '\n', mites_in_genes.to_string(max_r
 
 # check MITEs in exons and on board's exons
 exons_el10 = pd.read_csv('../files/EL10_exons_bed.csv', sep='\t').drop(columns=['gene_name', 'gene_strand'])
-print(exons_el10.memory_usage(deep=True).sum())
+# print(exons_el10.memory_usage(deep=True).sum())
 
 opt_exons_el10 = exons_el10.copy()
 
 exons_el10_obj = exons_el10.select_dtypes(include=['object']).copy()
-print(exons_el10_obj.memory_usage(deep=True).sum())
-print(exons_el10_obj)
+# print(exons_el10_obj.memory_usage(deep=True).sum())
+# print(exons_el10_obj)
 
 exons_el10_conv_obj = pd.DataFrame()
 for col in exons_el10_obj.columns:
@@ -153,23 +153,23 @@ for col in exons_el10_obj.columns:
         exons_el10_conv_obj.loc[:, col] = exons_el10_obj[col]
 
 opt_exons_el10[exons_el10_conv_obj.columns] = exons_el10_conv_obj
-print(opt_exons_el10.memory_usage(deep=True).sum())
-print(exons_el10_conv_obj.memory_usage(deep=True).sum())
-print(exons_el10_conv_obj)
+# print(opt_exons_el10.memory_usage(deep=True).sum())
+# print(exons_el10_conv_obj.memory_usage(deep=True).sum())
+# print(exons_el10_conv_obj)
 
 # exons_el10_float = exons_el10.select_dtypes(include=['float'])
 # print(exons_el10_float.memory_usage(deep=True).sum())
 # print(exons_el10_float)
 
 exons_el10_int = exons_el10.select_dtypes(include=['int'])
-print(exons_el10_int.memory_usage(deep=True).sum())
-print(exons_el10_int)
+# print(exons_el10_int.memory_usage(deep=True).sum())
+# print(exons_el10_int)
 
 exons_el10_conv_int = exons_el10_int.apply(pd.to_numeric, downcast='unsigned')
-print(exons_el10_conv_int.memory_usage(deep=True).sum())
+# print(exons_el10_conv_int.memory_usage(deep=True).sum())
 
 opt_exons_el10[exons_el10_conv_int.columns] = exons_el10_conv_int
-print(opt_exons_el10.memory_usage(deep=True).sum())
+# print(opt_exons_el10.memory_usage(deep=True).sum())
 
 del exons_el10, exons_el10_obj, exons_el10_conv_obj, exons_el10_int, exons_el10_conv_int
 
@@ -205,9 +205,12 @@ mites_in_exons_with_cds_check = ((mites_in_exons_with_cds_check.
                                  rename(columns={'start_cds': 'start_annot_cds', 'end_cds': 'end_annot_cds'}))
 print('MITEs in exons with UTRs checked:', '\n', mites_in_exons_with_cds_check.to_string(max_rows=200))
 
-# dokończyć sprawdzanie UTR!!! --> potem dla board --> potem 'exon' merge with lncRNA
 exon_no_cds_check = mites_in_exons_with_cds_check[mites_in_exons_with_cds_check['mite_loc'].eq('exon')]
 print('MITEs in exons not in cds:', '\n', exon_no_cds_check.reset_index(drop=True).to_string())
+
+lncRNA_el10 = pd.read_csv('../files/EL10_lncRNA.csv', sep='\t')
+lncRNA_check = exon_no_cds_check.merge(lncRNA_el10, how='inner', on=['chr', 'start_ex', 'end_ex'])
+print('MITEs in lncRNA regions:', '\n', lncRNA_check.to_string())
 
 mites_in_genes_ex = ((mites_in_genes.merge(mites_in_exons_with_cds_check, how='outer').
                      sort_values(by=['chr', 'start_gene', 'start_te', 'mite_loc'])).
@@ -222,8 +225,8 @@ utr_check = mites_in_genes_ex[mites_in_genes_ex['mite_loc'].eq('5_UTR')]
 print('MITEs in 5UTR:', '\n', utr_check.reset_index(drop=True).to_string())
 
 # check MITEs in cds
-cds_el10_drop = cds_el10.drop(columns=['gene_name', 'gene_strand'])
-mites_in_cds = (mites_in_exons.merge(cds_el10_drop, how='outer', on=['chr']).
+cds_el10_drop = cds_el10.drop(columns=['gene_strand'])
+mites_in_cds = (mites_in_exons.merge(cds_el10_drop, how='outer', on=['chr', 'gene_name']).
                   query('(start_te >= start_cds & end_te <= end_cds)').drop_duplicates().reset_index(drop=True))
 mites_in_cds['mite_loc'] = '1cds'
 print('MITEs in cds:', '\n', mites_in_cds.to_string(max_rows=30))
@@ -378,5 +381,11 @@ te_type = mites_in_genes_te_types.pop('te_type')
 mites_in_genes_te_types.insert(45, te_type.name, te_type)
 print(mites_in_genes_te_types.to_string(max_rows=300))
 
-# mites_in_genes_te_types.to_csv('../files/P4_all_results_in_one_utr.csv', sep='\t', index=False)
+cds_check = mites_in_genes_te_types[mites_in_genes_te_types['mite_loc'].eq('cds')]
+print('MITEs cds:', '\n', cds_check)
+
+utr_check = mites_in_genes_te_types[mites_in_genes_te_types['mite_loc'].eq('5_UTR')]
+print('MITEs 5UTR:', '\n', utr_check)
+
+mites_in_genes_te_types.to_csv('../files/P4_all_results_in_one_utr.csv', sep='\t', index=False)
 
