@@ -8,8 +8,13 @@ superfam_de_005 = (pd.read_csv('../files/P4_DE_005_superfam_counts.csv', sep='\t
 superfam_all_genes = (pd.read_csv('../files/P4_all_genes_superfam_counts.csv', sep='\t').
                       set_index('superfamily'))
 
+superfam_all_genes_utr = (pd.read_csv('../files/P4_superfam_all_genes_utr.csv', sep='\t').
+                          set_index('superfamily'))
+
 families_de_005 = pd.read_csv('../files/P4_families_DE_005.csv', sep='\t').set_index('family')
 families_all_genes = pd.read_csv('../files/P4_families_all_genes.csv', sep='\t').set_index('family')
+fam_all_genes_utr = (pd.read_csv('../files/P4_fam_all_genes_utr.csv', sep='\t').
+                          set_index('family'))
 
 superfam_de_005_updown = (pd.read_csv('../files/P4_DE_005_superfam_updown.csv', sep='\t').
                           set_index('superfamily'))
@@ -26,7 +31,7 @@ def heatmap_mites_loc(data, title, ylabel_fontsize, values_fontsize, cbar_param)
 
     # 'annot' and 'square' params to determine according to input data
     hm = sns.heatmap(data, cmap="YlOrBr", annot=False, fmt="0.0f", annot_kws={'size': values_fontsize}, linewidths=.5,
-                     cbar_kws=cbar_param)
+                     cbar_kws=cbar_param, square=True)
     plt.title(title, fontsize=20)
     plt.xlabel('Localisation', fontsize=12)
     plt.ylabel('Family', fontsize=12)  # or 'Family'
@@ -54,6 +59,11 @@ def heatmap_mites_loc(data, title, ylabel_fontsize, values_fontsize, cbar_param)
 
 # heatmap_mites_loc(families_de_005_updown, 'P4 MITEs associated with DEGs', 6, 5, {"pad": 0.01, "shrink": 0.35})
 
+heatmap_mites_loc(superfam_all_genes_utr[['upstream', '5_UTR', 'intron', '3_UTR', 'downstream']], 'P4 MITEs (for all genes)',
+       10, 10, {"pad": 0.02, "shrink": 0.5})
+
+# heatmap_mites_loc(fam_all_genes_utr[['upstream', '5_UTR', 'intron', '3_UTR', 'downstream']], 'P4 MITEs (for all genes)',
+#        5, 5, {"pad": 0.01, "shrink": 0.35})
 
 # to check and change!
 def heatmap_subplots(data, title, ylabel_fontsize, values_fontsize, cbar_param):
@@ -84,5 +94,5 @@ def heatmap_subplots(data, title, ylabel_fontsize, values_fontsize, cbar_param):
     plt.show()
 
 
-heatmap_subplots(superfam_de_005_updown[superfam_de_005_updown.columns[2:]], 'P4 MITEs associated with DEGs',
-               9, 7, {"pad": 0.01, "shrink": 0.35})
+# heatmap_subplots(superfam_de_005_updown[superfam_de_005_updown.columns[2:]], 'P4 MITEs associated with DEGs',
+#                9, 7, {"pad": 0.01, "shrink": 0.35})
