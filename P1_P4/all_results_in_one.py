@@ -348,12 +348,12 @@ exons_board_updown = (pd.concat([mites_in_genes_ex_cds_copy, mites_updown]).
                       drop_duplicates(subset=['chr', 'start_gene', 'end_gene', 'gene_strand', 'unique_no', 'family',
                       'start_te', 'end_te', 'mite_loc'], keep='first').reset_index(drop=True))
 
-print('MITEs with <mite_loc>:', '\n', exons_board_updown.to_string(max_rows=400))
+print('MITEs with <mite_loc>:', '\n', exons_board_updown.to_string(max_rows=200))
 cds_check = exons_board_updown[exons_board_updown['mite_loc'].eq('cds')]
 print('MITEs cds:', '\n', cds_check)
 
 bins_genes_mites = (opt_bins_and_de.merge(exons_board_updown, how='outer',
-                                          on=['chr', 'start_gene', 'end_gene', 'gene_strand', 'unique_no', 'set_no']).
+                                          on=['chr', 'gene_name', 'start_gene', 'end_gene', 'gene_strand', 'unique_no', 'set_no']).
                     reset_index(drop=True))
 print(bins_genes_mites.to_string(max_rows=200))
 
@@ -384,8 +384,14 @@ print(mites_in_genes_te_types.to_string(max_rows=300))
 cds_check = mites_in_genes_te_types[mites_in_genes_te_types['mite_loc'].eq('cds')]
 print('MITEs cds:', '\n', cds_check)
 
-utr_check = mites_in_genes_te_types[mites_in_genes_te_types['mite_loc'].eq('5_UTR')]
-print('MITEs 5UTR:', '\n', utr_check)
+utr_check = mites_in_genes_te_types[mites_in_genes_te_types['mite_loc'].eq('3_UTR')]
+print('MITEs 3UTR:', '\n', utr_check.reset_index(drop=True).to_string())
 
-mites_in_genes_te_types.to_csv('../files/P4_all_results_in_one_utr.csv', sep='\t', index=False)
+el10_utrs = pd.read_csv('../files/EL10_3UTRs.csv', sep='\t')
+utr3_with_annot = (utr_check.merge(el10_utrs, on=['chr', 'gene_name', 'gene_strand']).
+                   query('(start_te >= start_utr & end_te <= end_utr) | '
+                         '(start_te < start_utr & end_te > start_utr) | '
+                         '(start_te < end_utr & end_te > end_utr)').drop_duplicates().reset_index(drop=True))
+print(utr3_with_annot.to_string())
 
+# mites_in_genes_te_types.to_csv('../files/P4_all_results_in_one_utr.csv', sep='\t', index=False)
