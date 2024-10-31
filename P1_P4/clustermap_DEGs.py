@@ -29,9 +29,19 @@ def clustermap_degs(data, mite_fam):
     for label in mite_loc_labels.unique():
         degs_clustermap.ax_col_dendrogram.bar(0, 0, color=mite_loc_lut[label],
                                 label=label, linewidth=0)
-    degs_clustermap.ax_col_dendrogram.legend(loc="center", ncol=4)
+    degs_clustermap.ax_col_dendrogram.legend(loc="center left", ncol=4)
 
-    degs_clustermap.savefig(f'../files/clustermaps/{mite_fam}.pdf')
+
+# check for changing y label colours
+    genes_labels = data['ins_de']
+    genes_lut = dict(zip(genes_labels.unique(), 'bwr'))
+
+    for tick_label in degs_clustermap.ax_heatmap.axes.get_yticklabels():
+        tick_text = tick_label.get_text()
+        gene_name = genes_labels.loc[tick_text]
+        tick_label.set_color(genes_lut[gene_name])
+
+    # degs_clustermap.savefig(f'../files/clustermaps/{mite_fam}.pdf')
     plt.show()
 
 clustermap_degs(data_stow_3, "Stow3")
