@@ -2,17 +2,17 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-data_stow_3 = pd.read_csv('../files/heatmaps/cm_data/Stow3_cm_data.csv', sep='\t',
+data_stow_3 = pd.read_csv('../files/heatmaps/cm_data/Stow3_cm_data_correct.csv', sep='\t',
                           header=0, index_col=0)
-data_stow_36 = pd.read_csv('../files/heatmaps/cm_data/Stow36_cm_data.csv', sep='\t', header=0,
+data_stow_36 = pd.read_csv('../files/heatmaps/cm_data/Stow36_cm_data_correct.csv', sep='\t', header=0,
                            index_col=0)
-data_stow_40 = pd.read_csv('../files/heatmaps/cm_data/Stow40_cm_data.csv', sep='\t', header=0,
+data_stow_40 = pd.read_csv('../files/heatmaps/cm_data/Stow40_cm_data_correct.csv', sep='\t', header=0,
                            index_col=0)
-data_tourist_1 = pd.read_csv('../files/heatmaps/cm_data/Tourist1_cm_data.csv', sep='\t', header=0,
+data_tourist_1 = pd.read_csv('../files/heatmaps/cm_data/Tourist1_cm_data_correct.csv', sep='\t', header=0,
                              index_col=0)
-data_tourist_17 = pd.read_csv('../files/heatmaps/cm_data/Tourist17_cm_data.csv', sep='\t', header=0,
+data_tourist_17 = pd.read_csv('../files/heatmaps/cm_data/Tourist17_cm_data_correct.csv', sep='\t', header=0,
                               index_col=0)
-data_uc_33 = pd.read_csv('../files/heatmaps/cm_data/uc33_cm_data.csv', sep='\t', header=0,
+data_uc_33 = pd.read_csv('../files/heatmaps/cm_data/uc33_cm_data_correct.csv', sep='\t', header=0,
                          index_col=0)
 
 
@@ -25,8 +25,7 @@ def clustermap_degs(data, mite_fam):
     # variables for adding color labels to rows according to values from 'mite_loc'
     mite_loc_labels = data['mite_loc']
     mite_loc_options = ['upstream', '5UTR', 'intron', 'cds', '3UTR', 'downstream']
-    mite_loc_pal = sns.color_palette("Spectral_r",7)
-    # mite_loc_lut = dict(zip(mite_loc_labels.unique(), mite_loc_pal))
+    mite_loc_pal = sns.color_palette("Spectral_r", 7)
     mite_loc_lut = dict(zip(mite_loc_options, mite_loc_pal))
     print(mite_loc_lut)
     row_colors = mite_loc_labels.map(mite_loc_lut)
@@ -54,7 +53,9 @@ def clustermap_degs(data, mite_fam):
     # changing y-axis label colours according to 'ins_de' values
     genes_labels = data['ins_de']
     print(type(genes_labels), genes_labels)
-    genes_lut = dict(zip(genes_labels.unique(), 'rbg'))
+    genes_labels_options = ['ins_up', 'ins_down']
+    # genes_lut = dict(zip(genes_labels.unique(), 'rbg'))
+    genes_lut = dict(zip(genes_labels_options, 'rbg'))
     print(type(genes_lut), print(genes_lut))
 
     for tick_label in degs_clustermap.ax_heatmap.axes.get_yticklabels():
@@ -64,7 +65,7 @@ def clustermap_degs(data, mite_fam):
         print(type(gene_name), gene_name)
         tick_label.set_color(genes_lut[gene_name])
 
-    degs_clustermap.savefig(f'../files/heatmaps/clustermaps/{mite_fam}_no_repeats.pdf')
+    degs_clustermap.savefig(f'../files/heatmaps/clustermaps/{mite_fam}_correct.pdf')
     plt.show()
 
 
