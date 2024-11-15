@@ -38,12 +38,14 @@ families_de_005_updown = (pd.read_csv('../files/heatmaps/hm_data/P4_DE_005_famil
 fam_updown_utr = (pd.read_csv('../files/heatmaps/hm_data/P4_fam_updown_st.csv', sep='\t').
                   set_index('family'))
 
-fam_6 = pd.read_csv('../files/heatmaps/hm_data/6_families.csv', sep='\t').set_index('family')
-fam_6_st = pd.read_csv('../files/heatmaps/hm_data/6_families_st.csv', sep='\t').set_index('family')
+fam_6 = pd.read_csv('../files/heatmaps/hm_data/6_families_DEGs.csv', sep='\t').set_index('family')
+fam_6_st = pd.read_csv('../files/heatmaps/hm_data/6_families_DEGs_st.csv', sep='\t').set_index('family')
 
-fam_6_updown = pd.read_csv('../files/heatmaps/hm_data/6_fam_updown.csv', sep='\t').set_index('family')
-fam_6_updown_st = (pd.read_csv('../files/heatmaps/hm_data/6_fam_updown_st.csv', sep='\t').
+fam_6_updown = pd.read_csv('../files/heatmaps/hm_data/6_fam_DEGs_updown.csv', sep='\t').set_index('family')
+fam_6_updown_st = (pd.read_csv('../files/heatmaps/hm_data/6_fam_DEGs_updown_st.csv', sep='\t').
                    set_index('family'))
+
+fam_6_all_st = pd.read_csv('../files/heatmaps/hm_data/6_families_all_st.csv', sep='\t').set_index('family')
 
 
 def heatmap_mites_loc(data, title, ylabel_fontsize, values_fontsize, cbar_param):
@@ -120,6 +122,10 @@ def heatmap_mites_loc(data, title, ylabel_fontsize, values_fontsize, cbar_param)
 #                   '6 MITEs families - standarised (per 10 Mb)',
 #                   10, 10, {"pad": 0.02, "shrink": 0.5})
 
+heatmap_mites_loc(fam_6_all_st[['upstream', '5_UTR', 'intron', '3_UTR', 'downstream']],
+                  '6 MITEs families (all genes) - standarised (per 10 Mb)',
+                  10, 10, {"pad": 0.02, "shrink": 0.5})
+
 
 def heatmap_subplots(data, title, ylabel_fontsize):
 
@@ -179,6 +185,6 @@ def heatmap_subplots(data, title, ylabel_fontsize):
 #                                  '5_UTR_down', 'intron_down', '3_UTR_down', 'downstream_down']],
 #                  '6 MITEs families associated with DEGs', 9)
 
-heatmap_subplots(fam_6_updown_st[['upstream_up', '5_UTR_up', 'intron_up', '3_UTR_up', 'downstream_up', 'upstream_down',
-                                 '5_UTR_down', 'intron_down', '3_UTR_down', 'downstream_down']],
-                 '6 MITEs families associated with DEGs - standarised (per 10 Mb)', 9)
+# heatmap_subplots(fam_6_updown_st[['upstream_up', '5_UTR_up', 'intron_up', '3_UTR_up', 'downstream_up', 'upstream_down',
+#                                  '5_UTR_down', 'intron_down', '3_UTR_down', 'downstream_down']],
+#                  '6 MITEs families associated with DEGs - standarised (per 10 Mb)', 9)
