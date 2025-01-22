@@ -22,8 +22,8 @@ def columns_filter(mites_matrix, pop_symbol):  # filter columns from MITEs matri
     return pop_cols
 
 
-# cols = columns_filter(p1_mites_matrix_all, 'P1-')
-cols = columns_filter(p4_mites_matrix_all, 'P4-')
+cols = columns_filter(p1_mites_matrix_all, 'P1-')
+# cols = columns_filter(p4_mites_matrix_all, 'P4-')
 
 
 def mites_counts_all(te_matrix):  # generate .csv file with sum of MITEs for every family in all samples
@@ -93,14 +93,14 @@ def mites_counts_all(te_matrix):  # generate .csv file with sum of MITEs for eve
 
 
 def mites_counts_ins(te_matrix):  # generate .csv files for homo- and heterozygous MITE insertions
-    # for homozygous insertions - put family name instead of value if >= 0.7
+    # for homozygous insertions - put family name instead of value if >= 0.7 (or < 0.3 for empty homozygous (lt(0.3))
     # - uncomment if needed instead of heterozygous (comment lines 101-102 and 141)
-    # te_matrix[cols] = te_matrix[cols].mask(te_matrix[cols].apply(pd.to_numeric, errors='coerce').ge(0.7),
-    #                                        te_matrix['family'], axis=0)
+    te_matrix[cols] = te_matrix[cols].mask(te_matrix[cols].apply(pd.to_numeric, errors='coerce').lt(0.3),
+                                           te_matrix['family'], axis=0)
 
     # for heterozygous insertions - put family name instead of value if  < 0.3 >= 0.7
-    for col in cols:
-        te_matrix[col] = te_matrix.apply(lambda row: row['family'] if 0.3 <= row[col] < 0.7 else row[col], axis=1)
+    # for col in cols:
+    #     te_matrix[col] = te_matrix.apply(lambda row: row['family'] if 0.3 <= row[col] < 0.7 else row[col], axis=1)
 
     print(te_matrix.to_string(max_rows=30))
 
@@ -112,12 +112,12 @@ def mites_counts_ins(te_matrix):  # generate .csv files for homo- and heterozygo
         te_in_samples = pd.concat([te_in_samples, te_in_sample], axis=1)
 
     # for P1
-    # te_in_samples.columns = ['P1-6', 'P1-12', 'P1-22', 'P1-25', 'P1-26', 'P1-28', 'P1-88', 'P1-89', 'P1-90', 'P1-92',
-    #                          'P1-93', 'P1-95']
+    te_in_samples.columns = ['P1-6', 'P1-12', 'P1-22', 'P1-25', 'P1-26', 'P1-28', 'P1-88', 'P1-89', 'P1-90', 'P1-92',
+                             'P1-93', 'P1-95']
 
-    # for P4
-    te_in_samples.columns = ['P4-1', 'P4-7', 'P4-15', 'P4-29', 'P4-32', 'P4-35', 'P4-46', 'P4-47', 'P4-56', 'P4-60',
-                             'P4-62', 'P4-64']
+    # # for P4
+    # te_in_samples.columns = ['P4-1', 'P4-7', 'P4-15', 'P4-29', 'P4-32', 'P4-35', 'P4-46', 'P4-47', 'P4-56', 'P4-60',
+    #                          'P4-62', 'P4-64']
 
     te_in_samples = te_in_samples.fillna(0)
     te_in_samples = te_in_samples.filter(regex='^\D', axis=0).astype(int)
@@ -139,10 +139,11 @@ def mites_counts_ins(te_matrix):  # generate .csv files for homo- and heterozygo
 
     # saving as .csv
     # te_in_samples.to_csv('../files/P4_MITEs_homozyg_ins_count.csv', sep='\t')
-    te_in_samples.to_csv('../files/P4_MITEs_heterozyg_ins_count.csv', sep='\t')
+    # te_in_samples.to_csv('../files/P4_MITEs_heterozyg_ins_count.csv', sep='\t')
+    te_in_samples.to_csv('../files/P1_MITEs_empty_homozyg_count.csv', sep='\t')
 
 
-# mites_counts_ins(p4_mites_matrix_all)
+mites_counts_ins(p1_mites_matrix_all)
 
 
 p1_homo_ins = pd.read_csv('../files/P1_MITEs_homozyg_ins_count.csv', sep='\t')
