@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
 
-mites_in_el10 = pd.read_csv('../files/MITEs_in_EL10_from_bed.csv', sep='\t')
+# mites_in_el10 = pd.read_csv('../files/MITEs_in_EL10_from_bed.csv', sep='\t')
+mites_in_el10 = pd.read_csv('../files/P4_all_MITEs_from_matrix.csv', sep='\t')
 genes_el10 = pd.read_csv('../files/EL10_genes_annotation.csv', sep='\t')
 cds_el10 = pd.read_csv('../files/EL10_CDS_bed.csv', sep='\t')
 utr_el10 = pd.read_csv('../files/EL10_UTRs_longest_isoform.csv', sep='\t')
@@ -158,5 +159,5 @@ all_mites_in_el10 = (pd.concat([mites_in_genes_with_cds_and_utrs, mites_updown])
                       'start_te', 'end_te', 'mite_loc'], keep='first').
 reset_index(drop=True))
 
-all_mites_in_el10.to_csv('../files/EL10_with_MITEs.csv', sep='\t', index=False)
+all_mites_in_el10.to_csv('../files/P4_genes_with_MITEs.csv', sep='\t', index=False)
 print('MITEs with <mite_loc>:', '\n', all_mites_in_el10.to_string(max_rows=200))
