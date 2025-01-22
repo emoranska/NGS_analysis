@@ -65,6 +65,7 @@ def te_filter(sample_sets, te_matrix):
         out[f'{c}_no_ins'] = [[x for x in lst if x in ref] for ref, lst in zip(no_ins, out[c])]
 
     print(out.to_string(max_rows=50))
+    out.to_csv('../files/p4_out_check.csv', sep='\t', index=False)
 
     mites_in_bins = out[((out['one_one_ins'].map(lambda d: len(d) == 3)) & (out['zero_zero_no_ins'].map(lambda d:
                                                                                                         len(d) == 3))) |

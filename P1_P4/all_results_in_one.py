@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 # from concat_bins_with_genes_and_rest import find_unique_no
 
-bins_and_de = (pd.read_csv('../files/P4_all_EL10_genes_in_all_bins_with_DE_and_kallisto_tpm.csv', sep='\t'))
+bins_and_de = (pd.read_csv('../files/P1_all_EL10_genes_in_all_bins_with_DE_and_kallisto_tpm.csv', sep='\t'))
 # # print(bins_and_de.memory_usage(deep=True))
 
 # change gene localisation according to data from DE (Start, End)
@@ -74,13 +74,13 @@ del bins_conv_float
 del bins_and_de_int
 del bins_conv_int
 
-samples = pd.read_csv('../files/P4_list_to_DE_20more_genes.csv', sep='\t')
-sets_list = (pd.read_csv('../files/P4_sets_test.csv', sep='\t').
+samples = pd.read_csv('../files/P1_list_to_DE_20more_genes.csv', sep='\t')
+sets_list = (pd.read_csv('../files/P1_sets_test.csv', sep='\t').
              sort_values(by=['set_no', 'unique_no']).drop(columns=['genes_count']))
 # sets_list = find_unique_no(samples).drop(columns=['genes_count'])
 print(sets_list.to_string())
 
-mites_all = pd.read_csv('../files/P4_MITEs_with_bins_sets.csv', sep='\t').drop(columns=['set_no'])
+mites_all = pd.read_csv('../files/P1_MITEs_with_bins_sets.csv', sep='\t').drop(columns=['set_no'])
 
 mites_all_int = mites_all.select_dtypes(include=['int'])
 mites_conv_int = mites_all_int.apply(pd.to_numeric, downcast='unsigned')
@@ -257,10 +257,10 @@ bins_genes_mites = (opt_bins_and_de.merge(exons_board_updown, how='outer',
                     reset_index(drop=True))
 print(bins_genes_mites.to_string(max_rows=200))
 
-te_ref = pd.read_csv('../files/P4_ref_matrix_sort_2000_all.csv', sep='\t')
+te_ref = pd.read_csv('../files/P1_ref_matrix_sort_2000_all.csv', sep='\t')
 te_ref = te_ref.drop(columns=te_ref.columns[-12:], axis=1)
 print(te_ref.to_string(max_rows=30))
-te_nonref = pd.read_csv('../files/P4_nonref_matrix_all.csv', sep='\t')
+te_nonref = pd.read_csv('../files/P1_nonref_matrix_all.csv', sep='\t')
 te_nonref = te_nonref.drop(columns=te_nonref.columns[-12:], axis=1)
 print(te_nonref.to_string(max_rows=30))
 
@@ -281,4 +281,4 @@ te_type = mites_in_genes_te_types.pop('te_type')
 mites_in_genes_te_types.insert(45, te_type.name, te_type)
 print(mites_in_genes_te_types.to_string(max_rows=300))
 
-mites_in_genes_te_types.to_csv('../files/P4_all_results_in_one_utr_longest_isoforms.csv', sep='\t', index=False)
+mites_in_genes_te_types.to_csv('../files/P1_all_results_in_one_utr_longest_isoforms.csv', sep='\t', index=False)

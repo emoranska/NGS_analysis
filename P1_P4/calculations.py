@@ -201,6 +201,17 @@ def ins_table_final(homo_ins, hetero_ins, sum_ins):  # create final table for MI
 
 
 # ins_table_final(p1_homo_ins, p1_hetero_ins, df_sum)
-ins_table_final(p4_homo_ins, p4_hetero_ins, df_sum)
+# ins_table_final(p4_homo_ins, p4_hetero_ins, df_sum)
+
+
+p1_mites_final = pd.read_csv('../files/P4_correct_MITEs_DE_bins_all_and_XLOC.csv', sep='\t')
+
+
+def family_sum(result):
+    te_family_no = result.groupby(['family']).size()
+    print(te_family_no.to_string())
+
+
+family_sum(p1_mites_final)
 
 print("--- %s seconds ---" % (time.time() - start_time))
