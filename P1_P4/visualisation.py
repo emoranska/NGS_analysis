@@ -47,30 +47,37 @@ fam_6_updown_st = (pd.read_csv('../files/heatmaps/hm_data/6_fam_DEGs_updown_st.c
 
 fam_6_all_st = pd.read_csv('../files/heatmaps/hm_data/6_families_all_st.csv', sep='\t').set_index('family')
 
+superfam_all_mites = (pd.read_csv('../files/heatmaps/hm_data/P1_superfam_all_MITEs.csv', sep='\t').
+                      set_index('MITE'))
+superfam_all_mites_stand = (pd.read_csv('../files/heatmaps/hm_data/P4_superfam_all_MITEs_stand.csv',
+                                        sep='\t').set_index('MITE'))
+
 
 def heatmap_mites_loc(data, title, ylabel_fontsize, values_fontsize, cbar_param):
     # simple heatmap in Excel
     # df.style.background_gradient(cmap='Blues').set_properties(**{'font-size': '20px'}).to_excel('styled.xlsx')
 
-    plt.figure(figsize=(9, 10))
+    plt.figure(figsize=(10, 10))
 
     # 'annot' and 'square' params to determine according to input data, cmap=YlOrBr/YlGnBu
     hm = sns.heatmap(data, cmap="YlOrBr", annot=False, fmt="0.0f", annot_kws={'size': values_fontsize}, linewidths=.5,
                      cbar_kws=cbar_param, square=True)
     plt.title(title, fontsize=20)
-    plt.xlabel('Localisation', fontsize=12)
-    plt.ylabel('Family', fontsize=12)  # or 'Superfamily'
+    # plt.xlabel('Localisation', fontsize=12)
+    # plt.ylabel('MITE', fontsize=12)  # or 'MITE family'
 
     cbar = hm.collections[0].colorbar
-    cbar.ax.tick_params(labelsize=9)
+    cbar.ax.tick_params(labelsize=14)  # 9
 
-    hm.tick_params(axis='y', labelsize=ylabel_fontsize)
-    hm.tick_params(axis='x', labelsize=9, rotation=50)
+    hm.tick_params(axis='y', labelsize=ylabel_fontsize, rotation=360)
+    hm.tick_params(axis='x', labelsize=16, rotation=50)  # 9
 
     hm_figure = hm.get_figure()
-    hm_figure.savefig(f'../files/heatmaps/hm_6_families/6_families.pdf')
+    hm_figure.savefig(f'../files/heatmaps/hm/P4_all_MITES_stand.pdf')
     plt.show()
 
+
+heatmap_mites_loc(superfam_all_mites_stand, 'P4 standarised (per 100 kb)', 16, 10, {"pad": 0.02, "shrink": 0.5})
 
 # heatmap_mites_loc(superfam_de_005[['upstream', 'downstream', 'intron', 'cds']],
 # 'P4 MITEs (for DE genes < 0.05)', 10, 10, {"pad": 0.02, "shrink": 0.5})
@@ -122,9 +129,9 @@ def heatmap_mites_loc(data, title, ylabel_fontsize, values_fontsize, cbar_param)
 #                   '6 MITEs families - standarised (per 10 Mb)',
 #                   10, 10, {"pad": 0.02, "shrink": 0.5})
 
-heatmap_mites_loc(fam_6_all_st[['upstream', '5_UTR', 'intron', '3_UTR', 'downstream']],
-                  '6 MITEs families (all genes) - standarised (per 10 Mb)',
-                  10, 10, {"pad": 0.02, "shrink": 0.5})
+# heatmap_mites_loc(fam_6_all_st[['upstream', '5_UTR', 'intron', '3_UTR', 'downstream']],
+#                   '6 MITEs families (all genes) - standarised (per 10 Mb)',
+#                   10, 10, {"pad": 0.02, "shrink": 0.5})
 
 
 def heatmap_subplots(data, title, ylabel_fontsize):
