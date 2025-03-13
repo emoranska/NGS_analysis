@@ -1,7 +1,10 @@
 import pandas as pd
 import numpy as np
+import time
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+start_time = time.time()
 
 # d1 = {'chr': [1, 1], 'start': [64, 1000], 'end': [150, 2000], 'family': ['a', 'b'],
 #       'ins': [['P1-12', 'P1-22', 'P1-25', 'P1-28', 'P1-90'],
@@ -132,12 +135,42 @@ df_output_data = {'11': [['P4-1', 'P4-2', 'P4-3'], ['P4-1', 'P4-3', 'P4-4']],
 df_output = pd.DataFrame.from_dict(df_output_data)
 print(df_output.to_string())
 
-def extract_values(row, col_name):
-    return [row[item] if item in row else np.nan for item in row[col_name]]
+# def extract_values(row, col_name):
+#     return [row[item] if item in row else np.nan for item in row[col_name]]
+#
+# for col in ['11', '00']:
+#     extracted_values = df_matrix.apply(lambda row: extract_values(row, col), axis=1)
+#     df_expanded = pd.DataFrame(extracted_values.tolist(), columns=[f"{col}_{i+1}" for i in range(extracted_values.str.len().max())])
+#     df_matrix = pd.concat([df_matrix, df_expanded], axis=1)
 
-for col in ['11', '00']:
-    extracted_values = df_matrix.apply(lambda row: extract_values(row, col), axis=1)
-    df_expanded = pd.DataFrame(extracted_values.tolist(), columns=[f"{col}_{i+1}" for i in range(extracted_values.str.len().max())])
-    df_matrix = pd.concat([df_matrix, df_expanded], axis=1)
+# # columns to consider
+# cols = ['11', '00']
 
-print(df_matrix)
+# # first reshape the columns with the lists
+# tmp1 = (df_matrix[cols]
+#         .melt(value_name='col', ignore_index=False)
+#         .explode('col').reset_index()
+#         .assign(n=lambda x: x.groupby(['index', 'variable']).cumcount()+1)
+#        )
+# # then reshape the columns with the values
+# tmp2 = (df_matrix.drop(columns=cols, errors='ignore')
+#         .melt(var_name='col', ignore_index=False)
+#         .reset_index()
+#        )
+#
+# # merge, reshape, rename columns
+# out = tmp1.merge(tmp2, how='left').pivot(index='index', columns=['variable', 'n'], values='value')
+# out.columns = out.columns.map(lambda x: f'{x[0]}_{x[1]}')
+#
+# # join to original
+# out = df_matrix.join(out)
+# print(out.to_string())
+
+df_matrix_trans = df_matrix.assign(
+    **{f"{k}_{i+1}": df_matrix.values[
+    np.arange(len(df_matrix)),
+    df_matrix.columns.get_indexer(df_matrix[k].str[i])]
+       for k in ['11', '00'] for i in range(3)})
+
+print(df_matrix_trans.to_string())
+print("--- %s seconds ---" % (time.time() - start_time))
