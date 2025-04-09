@@ -166,11 +166,45 @@ print(df_output.to_string())
 # out = df_matrix.join(out)
 # print(out.to_string())
 
-df_matrix_trans = df_matrix.assign(
-    **{f"{k}_{i+1}": df_matrix.values[
-    np.arange(len(df_matrix)),
-    df_matrix.columns.get_indexer(df_matrix[k].str[i])]
-       for k in ['11', '00'] for i in range(3)})
+# df_matrix_trans = df_matrix.assign(
+#     **{f"{k}_{i+1}": df_matrix.values[
+#     np.arange(len(df_matrix)),
+#     df_matrix.columns.get_indexer(df_matrix[k].str[i])]
+#        for k in ['11', '00'] for i in range(3)})
+#
+# print(df_matrix_trans.to_string())
+# print("--- %s seconds ---" % (time.time() - start_time))
 
-print(df_matrix_trans.to_string())
-print("--- %s seconds ---" % (time.time() - start_time))
+df_genes_data = {'gene_id': ['g0', 'g1', 'g1', 'g2', 'g3', 'g4', 'g4', 'g4']}
+df_genes = pd.DataFrame.from_dict(df_genes_data)
+print(df_genes.to_string())
+
+df_genes_marked_data = {'gene_id': ['g0', 'g1_TE1', 'g1_TE2', 'g2', 'g3', 'g4_TE1', 'g4_TE2', 'g4_TE3']}
+df_genes_marked = pd.DataFrame.from_dict(df_genes_marked_data)
+print(df_genes_marked.to_string())
+
+rep = []
+gene_list = df_genes['gene_id']
+for idx in range(0, len(gene_list) - 1):
+    # getting Consecutive elements
+    if gene_list[idx] == gene_list[idx + 1]:
+        rep.append(gene_list[idx])
+
+# getting list of repetitive gene names
+rep = list(set(rep))
+
+# printing result
+print("Consecutive identical elements are : " + str(rep))
+
+# Series as name for shorter reference
+s = df_genes['gene_id']
+# group consecutive occurrences
+group = s.ne(s.shift()).cumsum()
+# form group and save as "g" for efficiency
+g = s.groupby(group)
+# identify groups with more than 1 value
+m = g.transform('size').gt(1)
+# increment values
+df_genes.loc[m, 'gene_id'] += '_TE'+g.cumcount().add(1).astype(str)
+
+print(df_genes.to_string())
