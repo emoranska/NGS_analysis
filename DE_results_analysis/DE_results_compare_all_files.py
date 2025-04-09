@@ -142,7 +142,7 @@ print(k_all.to_string(max_rows=30))
 
 out_with_kallisto = pd.concat([de_df, k_all], axis=1)
 print(out_with_kallisto.to_string(max_rows=200))
-out_with_kallisto.to_csv('../files/P1_all_EL10_genes_in_all_bins_with_DE_and_kallisto_tpm.csv', sep='\t', index=False)
+# out_with_kallisto.to_csv('../files/P1_all_EL10_genes_in_all_bins_with_DE_and_kallisto_tpm.csv', sep='\t', index=False)
 
 
 def xloc_checking():
