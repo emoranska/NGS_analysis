@@ -14,10 +14,10 @@ data_tourist_17 = pd.read_csv('../files/heatmaps/cm_data/Tourist17_cm_data_corre
                               index_col=0)
 data_uc_33 = pd.read_csv('../files/heatmaps/cm_data/uc33_cm_data_correct.csv', sep='\t', header=0,
                          index_col=0)
-data_deg_with_mites = pd.read_csv('../files/heatmaps/cm_data/P1_DE005_with_MITEs_cm_general_data_final.csv',
+data_deg_with_mites = pd.read_csv('../files/heatmaps/cm_data/P1_DE005_with_MITEs_cm_general_data_final_1.csv',
                                   sep='\t', header=0, index_col=0)
 data_all_genes_with_mites = pd.read_csv('../files/heatmaps/cm_data/'
-                                        'P4_all_genes_with_MITEs_cm_general_data_final.csv',
+                                        'P1_all_genes_with_MITEs_cm_general_data_final_1.csv',
                                         sep='\t', header=0, index_col=0)
 
 
@@ -61,6 +61,7 @@ def clustermap_degs(data, mite_fam):
     print(type(genes_labels), genes_labels)
     # genes_labels_options = ['ins_up', 'ins_down']
     genes_labels_options = ['up', 'down']
+    # genes_labels_options = ['up', 'down', 'no_DE']
     # genes_lut = dict(zip(genes_labels.unique(), 'rbg'))
     genes_lut = dict(zip(genes_labels_options, 'rbg'))
     print(type(genes_lut), print(genes_lut))
@@ -72,7 +73,7 @@ def clustermap_degs(data, mite_fam):
         print(type(gene_name), gene_name)
         tick_label.set_color(genes_lut[gene_name])
 
-    degs_clustermap.savefig(f'../files/heatmaps/clustermaps/{mite_fam}_MITES_genes.pdf')
+    degs_clustermap.savefig(f'../files/heatmaps/clustermaps/{mite_fam}_MITES_DEGs_1.pdf')
     plt.show()
 
 
@@ -82,5 +83,5 @@ def clustermap_degs(data, mite_fam):
 # clustermap_degs(data_tourist_1, "Tourist1")
 # clustermap_degs(data_tourist_17, "Tourist17")
 # clustermap_degs(data_uc_33, "uc33")
-# clustermap_degs(data_deg_with_mites, ' P1_all')
-clustermap_degs(data_all_genes_with_mites, ' P4_all')
+clustermap_degs(data_deg_with_mites, ' P1_all')
+# clustermap_degs(data_all_genes_with_mites, ' P1_all')

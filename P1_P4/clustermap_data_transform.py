@@ -2,8 +2,8 @@ import pandas as pd
 import ast
 import numpy as np
 
-# df_matrix = pd.read_csv('../files/heatmaps/cm_data/P4_DE005_with_MITEs_cm_general_data.csv', sep='\t')
-df_matrix = pd.read_csv('../files/heatmaps/cm_data/P4_all_genes_with_MITEs_cm_general_data.csv', sep='\t')
+df_matrix = pd.read_csv('../files/heatmaps/cm_data/P1_DE005_with_MITEs_cm_general_data.csv', sep='\t')
+# df_matrix = pd.read_csv('../files/heatmaps/cm_data/P1_all_genes_with_MITEs_cm_general_data_1.csv', sep='\t')
 
 print(df_matrix.to_string(max_rows=30))
 
@@ -27,7 +27,7 @@ df_matrix_trans.loc[m, ['one_one_2', 'zero_zero_2']] = df_matrix_trans.loc[
 df_matrix_trans.loc[m, ['one_one_3', 'zero_zero_3']] = df_matrix_trans.loc[
     m, ['zero_zero_3', 'one_one_3']].values
 
-print(type(df_matrix_trans), '\n',df_matrix_trans.to_string(max_rows=30))
+print(type(df_matrix_trans), '\n', df_matrix_trans.to_string(max_rows=30))
 
 df_final = df_matrix_trans.rename(columns={'one_one_1': 'ins_1', 'one_one_2': 'ins_2', 'one_one_3': 'ins_3',
                                            'zero_zero_1': 'no_ins_1', 'zero_zero_2': 'no_ins_2',
@@ -53,5 +53,5 @@ m = g.transform('size').gt(1)
 # increment values
 df_final.loc[m, 'gene_name'] += '_TE'+g.cumcount().add(1).astype(str)
 print(df_final.to_string(max_rows=30))
-# df_final.to_csv('../files/heatmaps/cm_data/P4_DE005_with_MITEs_cm_general_data_final.csv', sep='\t', index=False)
-df_final.to_csv('../files/heatmaps/cm_data/P4_all_genes_with_MITEs_cm_general_data_final.csv', sep='\t', index=False)
+df_final.to_csv('../files/heatmaps/cm_data/P1_DE005_with_MITEs_cm_general_data_final_1.csv', sep='\t', index=False)
+# df_final.to_csv('../files/heatmaps/cm_data/P1_all_genes_with_MITEs_cm_general_data_final_1.csv', sep='\t', index=False)
