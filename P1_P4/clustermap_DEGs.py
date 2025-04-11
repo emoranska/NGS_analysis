@@ -16,13 +16,11 @@ import seaborn as sns
 #                          index_col=0)
 # data_deg_with_mites = pd.read_csv('../files/heatmaps/cm_data/P1_DE005_with_MITEs_cm_general_data_final_1.csv',
 #                                   sep='\t', header=0, index_col=0)
-# data_all_genes_with_mites = pd.read_csv('../files/heatmaps/cm_data/'
-#                                         'P1_all_genes_with_MITEs_cm_general_data_final_1.csv',
-#                                         sep='\t', header=0, index_col=0)
-# data_all_degs = pd.read_csv('../files/clustermaps/P1_all_DEGs_cm_general_data_final.csv',
-#                                         sep='\t', header=0, index_col=0)
-data_all_degs = pd.read_csv('../files/clustermaps/P1_DE005_with_MITEs_cm_general_data_final_1.csv',
+data_all_genes_with_mites = pd.read_csv('../files/heatmaps/cm_data/'
+                                        'P4_all_genes_with_MITEs_cm_general_data_final_1.csv',
                                         sep='\t', header=0, index_col=0)
+# data_all_degs = pd.read_csv('../files/heatmaps/cm_data/P1_all_DEGs_cm_general_data_final.csv',
+#                             sep='\t', header=0, index_col=0)
 
 
 def clustermap_degs(data, mite_fam):
@@ -43,7 +41,7 @@ def clustermap_degs(data, mite_fam):
     # create clustermap
     degs_clustermap = sns.clustermap(data_tpm, cmap="bwr", xticklabels=sample_names, yticklabels=genes, z_score=0,
                                      center=0, col_cluster=False, figsize=(6, 7), row_colors=row_colors,
-                                     cbar_kws={'label': 'row Z-score'}, cbar_pos=(.95, .65, .02, .15))
+                                     cbar_kws={'label': 'row Z-score'}, cbar_pos=(.82, .65, .02, .15))
 
     ax = degs_clustermap.ax_heatmap
 
@@ -52,8 +50,8 @@ def clustermap_degs(data, mite_fam):
 
     # set main title and axis labels font size
     # ax.set_title(f"{mite_fam} MITEs associated with DEGs", fontsize=18)
-    # ax.set_title(f"{mite_fam} MITEs associated with all genes", fontsize=18)
-    ax.set_title(f"{mite_fam} DEGs", fontsize=18)
+    ax.set_title(f"{mite_fam} MITEs associated with all genes", fontsize=18)
+    # ax.set_title(f"{mite_fam} DEGs", fontsize=18)
     degs_clustermap.tick_params(axis='x', labelsize=8)
     degs_clustermap.tick_params(axis='y', labelsize=4)
     # plt.setp(degs_clustermap.ax_heatmap.get_xticklabels(), labelsize=8)
@@ -69,8 +67,8 @@ def clustermap_degs(data, mite_fam):
     # genes_labels = data['de_all']
     print(type(genes_labels), genes_labels)
     # genes_labels_options = ['ins_up', 'ins_down']
-    genes_labels_options = ['up', 'down']
-    # genes_labels_options = ['up', 'down', 'no_DE']
+    # genes_labels_options = ['up', 'down']
+    genes_labels_options = ['up', 'down', 'no_DE']
     # genes_lut = dict(zip(genes_labels.unique(), 'rbg'))
     genes_lut = dict(zip(genes_labels_options, 'rbg'))
     print(type(genes_lut), print(genes_lut))
@@ -82,8 +80,7 @@ def clustermap_degs(data, mite_fam):
         print(type(gene_name), gene_name)
         tick_label.set_color(genes_lut[gene_name])
 
-    # degs_clustermap.savefig(f'../files/heatmaps/clustermaps/{mite_fam}_DEGs.pdf')
-    # degs_clustermap.savefig(f'../files/clustermaps/{mite_fam}_DEGs.pdf')
+    degs_clustermap.savefig(f'../files/heatmaps/clustermaps/{mite_fam}_MITEs_genes_1.pdf')
     plt.show()
 
 
@@ -94,6 +91,5 @@ def clustermap_degs(data, mite_fam):
 # clustermap_degs(data_tourist_17, "Tourist17")
 # clustermap_degs(data_uc_33, "uc33")
 # clustermap_degs(data_deg_with_mites, ' P1_all')
-# clustermap_degs(data_all_genes_with_mites, ' P1_all')
-clustermap_degs(data_all_degs, 'P1_all')
-
+clustermap_degs(data_all_genes_with_mites, ' P4_all')
+# clustermap_degs(data_all_degs, 'P1_all')
