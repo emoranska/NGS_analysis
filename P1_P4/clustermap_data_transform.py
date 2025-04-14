@@ -3,14 +3,15 @@ import ast
 import numpy as np
 
 # df_matrix = pd.read_csv('../files/heatmaps/cm_data/P1_DE005_with_MITEs_cm_general_data.csv', sep='\t')
-df_matrix = pd.read_csv('../files/heatmaps/cm_data/P1_all_genes_with_MITEs_cm_general_data_1.csv', sep='\t')
+# df_matrix = pd.read_csv('../files/heatmaps/cm_data/P1_all_genes_with_MITEs_cm_general_data_1.csv', sep='\t')
 # df_matrix = pd.read_csv('../files/heatmaps/cm_data/P4_all_DEGs_cm_general_data.csv', sep='\t')
+df_matrix = pd.read_csv('../files/heatmaps/cm_data/P4_all_genes_cm_general_data.csv', sep='\t')
 
-print(df_matrix.to_string(max_rows=30))
+# print(df_matrix.to_string(max_rows=30))
 
 df_matrix['one_one'] = df_matrix['one_one'].apply(lambda x: ast.literal_eval(x))
 df_matrix['zero_zero'] = df_matrix['zero_zero'].apply(lambda x: ast.literal_eval(x))
-print(df_matrix.to_string(max_rows=30))
+# print(df_matrix.to_string(max_rows=30))
 
 df_matrix_trans = df_matrix.assign(**{f"{k}_{i+1}": df_matrix.values[np.arange(
     len(df_matrix)), df_matrix.columns.get_indexer(df_matrix[k].str[i])]
@@ -18,7 +19,10 @@ df_matrix_trans = df_matrix.assign(**{f"{k}_{i+1}": df_matrix.values[np.arange(
 
 print(df_matrix_trans.to_string(max_rows=30))
 
-m = (df_matrix_trans['ins_de'] != df_matrix_trans['de_results']) & (df_matrix_trans['ins_de'] != 'no_TE')
+# m = (df_matrix_trans['ins_de'] != df_matrix_trans['de_results']) & (df_matrix_trans['ins_de'] != 'no_TE')
+m = (df_matrix_trans['ins_de'] != df_matrix_trans['de_results']) & ((df_matrix_trans['ins_de'] != 'TE_no_DE') |
+                                                                    (df_matrix_trans['ins_de'] != 'no_TE'))
+
 df_matrix_trans.loc[m, ['one_one_1', 'zero_zero_1']] = df_matrix_trans.loc[
     m, ['zero_zero_1', 'one_one_1']].values  # Swap rows if condition met
 
@@ -39,13 +43,14 @@ df_final = df_final.loc[:, ['gene_name', 'ins_1', 'ins_2', 'ins_3', 'no_ins_1', 
                             'ins_de', 'family']]
 # df_final = df_final.loc[:, ['gene_name', 'ins_1', 'ins_2', 'ins_3', 'no_ins_1', 'no_ins_2', 'no_ins_3', 'mite_loc',
 #                             'de_all', 'family']]
-print(df_final.to_string(max_rows=30))
+print(df_final.to_string(max_rows=300))
 
 df_final = (df_final.drop_duplicates().drop_duplicates(subset=['gene_name', 'mite_loc', 'ins_de', 'family']).
             reset_index(drop=True))
 # df_final = (df_final.drop_duplicates().drop_duplicates(subset=['gene_name', 'mite_loc', 'de_all', 'family']).
 #             reset_index(drop=True))
-print(df_final.to_string(max_rows=30))
+# df_final = df_final.drop_duplicates().reset_index(drop=True)
+print(df_final.to_string(max_rows=100))
 
 # Series as name for shorter reference
 s = df_final['gene_name']
@@ -57,7 +62,13 @@ g = s.groupby(group)
 m = g.transform('size').gt(1)
 # increment values
 df_final.loc[m, 'gene_name'] += '_TE'+g.cumcount().add(1).astype(str)
-print(df_final.to_string(max_rows=30))
+# print(df_final.to_string(max_rows=200))
+df_final = (df_final.sort_values(by=['gene_name', 'mite_loc', 'ins_de']).drop_duplicates(subset=['gene_name']).
+            reset_index(drop=True))
+print(df_final.to_string(max_rows=200))
+df_final = df_final.replace('z_no_TE', 'no_TE').replace('zTE_no_DE', 'TE_no_DE')
+print(df_final.to_string(max_rows=200))
 # df_final.to_csv('../files/heatmaps/cm_data/P1_DE005_with_MITEs_cm_general_data_final_1.csv', sep='\t', index=False)
-df_final.to_csv('../files/heatmaps/cm_data/P1_all_genes_with_MITEs_cm_general_data_final_1.csv', sep='\t', index=False)
+# df_final.to_csv('../files/heatmaps/cm_data/P1_all_genes_with_MITEs_cm_general_data_final_1.csv', sep='\t', index=False)
 # df_final.to_csv('../files/heatmaps/cm_data/P4_all_DEGs_cm_general_data_final.csv', sep='\t', index=False)
+df_final.to_csv('../files/heatmaps/cm_data/P4_all_genes_cm_general_data_final.csv', sep='\t', index=False)
