@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 # -----------------------------
 # 1. Load input data
 # -----------------------------
-mites = pd.read_csv("../files/permutation/P1_mites_in_bins_to_permutation.bed", sep="\t",
+mites = pd.read_csv("../files/permutation/P1_mites_in_bins_to_permutation_no_dupl.bed", sep="\t",
                     header=None, names=["chr", "start", "end"])
 genes = pd.read_csv("../files/permutation/P1_genes_in_bins_to_permutation.bed", sep="\t",
                     header=None, names=["chr", "start", "end", "gene_id", "is_DEG"])
@@ -46,6 +46,7 @@ print(f"Observed MITE–DEG associations: {observed}")
 # 3. Permutation test
 # -----------------------------
 n_permutations = 1000
+
 np.random.seed(42)
 
 # Store null distribution
@@ -70,10 +71,16 @@ print(f"Empirical p-value: {p_value:.4g}")
 # 5. Optional: visualize
 # -----------------------------
 
+# correct number of MITEs associated wit DEGs according to data in Supplementary Materials 2
+observed = 170
+p_value = (np.sum(null_counts >= observed) + 1) / (n_permutations + 1)
+print(f"Empirical p-value with correct number of MITEs associated with DEGs: {p_value}", type(p_value))
+# print(f"Empirical p-value: {p_value:.4g}")
+
 plt.hist(null_counts, bins=30, color="gray", alpha=0.7)
 plt.axvline(observed, color="red", linestyle="dashed", linewidth=2, label="Observed")
 plt.xlabel("Number of MITE–DEG associations (randomized)")
 plt.ylabel("Frequency")
 plt.title("Permutation Test for MITE–DEG Enrichment")
-plt.legend()
+plt.legend(loc='upper center')
 plt.show()
