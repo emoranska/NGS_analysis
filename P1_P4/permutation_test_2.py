@@ -72,7 +72,7 @@ print(f"Empirical p-value: {p_value:.4g}")
 # -----------------------------
 
 # correct number of MITEs associated wit DEGs according to data in Supplementary Materials 2
-observed = 170
+observed = 36
 p_value = (np.sum(null_counts >= observed) + 1) / (n_permutations + 1)
 print(f"Empirical p-value with correct number of MITEs associated with DEGs: {p_value}", type(p_value))
 # print(f"Empirical p-value: {p_value:.4g}")
