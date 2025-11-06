@@ -3,7 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 sns.set_theme(style="ticks", palette="deep")
-mites_dens = pd.read_csv('../files/lineplot_density/P4_mite_density_data.csv', sep='\t')
+mites_dens = pd.read_csv('../files/mite_density_data/P4_mite_density_data.csv', sep='\t')
 
 # dens = sns.lineplot(data=mites_dens, x="range", y="all_mites_dens")
 mites_dens_wide = mites_dens.pivot(index="range", columns="chr", values="all_mites_dens")

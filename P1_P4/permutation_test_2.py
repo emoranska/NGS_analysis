@@ -22,8 +22,8 @@ genes['end'] = genes['end'].astype(int)
 WINDOW = 2000
 
 
+# Count how many DEGs are associated with MITEs.
 def count_mite_associated_genes(mites, genes):
-    """Count how many DEGs are associated with MITEs."""
     assoc = []
     for _, gene in genes.iterrows():
         subset = mites[mites["chr"] == gene["chr"]]
@@ -71,16 +71,31 @@ print(f"Empirical p-value: {p_value:.4g}")
 # 5. Optional: visualize
 # -----------------------------
 
-# correct number of MITEs associated wit DEGs according to data in Supplementary Materials 2
+null_counts = pd.read_csv("../files/permutation/P1_null_counts.csv").to_numpy()
+n_permutations = 1000
+
+# correct (slightly reduced) number of MITEs associated with DEGs according to data in Supplementary Materials 2
 observed = 36
-p_value = (np.sum(null_counts >= observed) + 1) / (n_permutations + 1)
+p_value = (np.sum(null_counts >= observed) + 1) / (n_permutations + 1)  # no difference in p-value
 print(f"Empirical p-value with correct number of MITEs associated with DEGs: {p_value}", type(p_value))
 # print(f"Empirical p-value: {p_value:.4g}")
 
-plt.hist(null_counts, bins=30, color="gray", alpha=0.7)
-plt.axvline(observed, color="red", linestyle="dashed", linewidth=2, label="Observed")
-plt.xlabel("Number of MITE–DEG associations (randomized)")
-plt.ylabel("Frequency")
-plt.title("Permutation Test for MITE–DEG Enrichment")
-plt.legend(loc='upper center')
+alpha = 0.01
+threshold = np.quantile(null_counts, 1 - alpha)
+
+plt.figure(figsize=(12, 8))
+plt.rc('xtick', labelsize=20)
+plt.rc('ytick', labelsize=20)
+plt.hist(null_counts, bins=15, color="gray", alpha=0.7)
+
+# Add observed value
+plt.axvline(observed, color="red", linestyle="dashed", linewidth=2, label=f"Observed number (p-value = {p_value:.3f})")
+
+# Add significance threshold line
+plt.axvline(threshold, color="blue", linestyle="dotted", linewidth=2,
+            label=f"Significance cutoff (α = {alpha})")
+plt.xlabel("Number of MITE–DEG associations (randomized)", fontsize=25)
+plt.ylabel("Frequency", fontsize=25)
+# plt.title("Permutation Test for MITE–DEG Enrichment")
+plt.legend(loc='upper right', fontsize=18)
 plt.show()
