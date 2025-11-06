@@ -101,11 +101,10 @@ for i, chrom in enumerate(chrom_order):
     )
 
     # Draw outline *around* the whole chromosome
-    outline_pad = 0.05  # small padding so the outline sits around, not on, the bar
     ax.add_patch(Rectangle(
-        (0, i - stripe_height/2 - outline_pad/2),  # shift slightly lower
+        (0, i - stripe_height/2),  # shift slightly lower
         chrom_len,
-        stripe_height + outline_pad,  # make it a bit taller
+        stripe_height,  # make it a bit taller
         fill=False,
         edgecolor="black",
         linewidth=1.0,
